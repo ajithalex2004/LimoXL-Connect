@@ -1,0 +1,40 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import Layout from './components/Layout';
+import Dashboard from './pages/Dashboard';
+import RFQs from './pages/RFQs';
+import Trips from './pages/Trips';
+import Invoices from './pages/Invoices';
+import Vehicles from './pages/partner/Vehicles';
+import Drivers from './pages/partner/Drivers';
+import Login from './pages/Login';
+import OutsourceMaster from './pages/operator/OutsourceMaster';
+import SubmittedQuotes from './pages/operator/SubmittedQuotes';
+import Dispatch from './pages/operator/Dispatch';
+import SecureDriverLink from './pages/SecureDriverLink';
+
+function App() {
+    return (
+        <BrowserRouter>
+            <Routes>
+                <Route path="/" element={<Layout />}>
+                    <Route index element={<Dashboard />} />
+                    <Route path="partner/dashboard" element={<Dashboard />} />
+                    <Route path="rfqs" element={<RFQs />} />
+                    <Route path="partner/rfqs" element={<RFQs />} />
+                    <Route path="partner/trips" element={<Trips />} />
+                    <Route path="partner/vehicles" element={<Vehicles />} />
+                    <Route path="partner/drivers" element={<Drivers />} />
+                    <Route path="partner/invoices" element={<Invoices />} />
+                    <Route path="outsource-master" element={<OutsourceMaster />} />
+                    <Route path="dispatch" element={<Dispatch />} />
+                    <Route path="quotes" element={<SubmittedQuotes />} />
+                </Route>
+                <Route path="/login" element={<Login />} />
+                <Route path="/link/:token" element={<SecureDriverLink />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+        </BrowserRouter>
+    );
+}
+
+export default App;

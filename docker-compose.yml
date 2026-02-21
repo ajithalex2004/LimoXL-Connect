@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgis/postgis:15-3.3
+    container_name: limoxlink_db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: limoxlink
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/db/migrations:/docker-entrypoint-initdb.d
+    networks:
+      - limoxlink-net
+
+  redis:
+    image: redis:alpine
+    container_name: limoxlink_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - limoxlink-net
+
+volumes:
+  postgres_data:
+
+networks:
+  limoxlink-net:
+    driver: bridge
