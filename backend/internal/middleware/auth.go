@@ -4,13 +4,22 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var SecretKey = []byte("super-secret-key-change-this-in-prod")
+var SecretKey = []byte(getSecret())
+
+func getSecret() string {
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		return "super-secret-key-change-this-in-prod"
+	}
+	return secret
+}
 
 type Claims struct {
 	UserID    string `json:"user_id"`
