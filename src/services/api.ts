@@ -244,7 +244,7 @@ export interface Invoice {
     supplier_company_id: string;
     invoice_number: string;
     amount: number;
-    status: 'PENDING' | 'PAID' | 'REJECTED';
+    status: 'PENDING' | 'PAID' | 'REJECTED' | 'CLOSED';
     created_at: string;
     booking_reference?: string;
 }

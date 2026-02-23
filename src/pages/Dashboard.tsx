@@ -1,4 +1,4 @@
-import { FileText, CheckCircle, Clock, AlertCircle, X, Check, Building, Users } from 'lucide-react';
+import { FileText, CheckCircle, Clock, AlertCircle, X, Building, Users } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 import { partnerService, operatorService, type Trip } from '../services/api';
