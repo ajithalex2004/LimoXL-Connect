@@ -22,10 +22,12 @@ interface Company {
     type: string;
 }
 
-plate_number: string;
-type: string;
-permit_expiry ?: string;
-insurance_expiry ?: string;
+interface Vehicle {
+    id: string;
+    plate_number: string;
+    type: string;
+    permit_expiry?: string;
+    insurance_expiry?: string;
 }
 
 interface Driver {
