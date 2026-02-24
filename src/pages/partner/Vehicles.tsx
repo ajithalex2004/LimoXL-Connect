@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { partnerService, type Vehicle } from '../../services/api';
-import { Plus, Car } from 'lucide-react';
+import { Plus, Car, ShieldCheck } from 'lucide-react';
 
 const Vehicles = () => {
     // List State
@@ -14,7 +14,9 @@ const Vehicles = () => {
         vehicle_class: 'Standard',
         vehicle_group: 'Sedan',
         model: '',
-        capacity: 4 as number
+        capacity: 4 as number,
+        permit_expiry: '',
+        insurance_expiry: ''
     });
 
     useEffect(() => {
@@ -42,13 +44,26 @@ const Vehicles = () => {
                 vehicle_class: 'Standard',
                 vehicle_group: 'Sedan',
                 model: '',
-                capacity: 4
+                capacity: 4,
+                permit_expiry: '',
+                insurance_expiry: ''
             });
             loadData();
         } catch (error) {
             console.error("Failed to create vehicle", error);
             alert("Failed to create vehicle");
         }
+    };
+
+    const getExpiryStatus = (dateStr?: string) => {
+        if (!dateStr) return null;
+        const expiry = new Date(dateStr);
+        const today = new Date();
+        const diffDays = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 3600 * 24));
+
+        if (diffDays < 0) return { label: 'Expired', color: 'text-red-600 bg-red-50 border-red-100' };
+        if (diffDays < 30) return { label: `Expires in ${diffDays}d`, color: 'text-amber-600 bg-amber-50 border-amber-100' };
+        return { label: 'Compliant', color: 'text-emerald-600 bg-emerald-50 border-emerald-100' };
     };
 
     if (loading) return <div>Loading...</div>;
@@ -81,9 +96,34 @@ const Vehicles = () => {
                         <p className="text-sm text-gray-500">
                             {vehicle.vehicle_class} {vehicle.vehicle_group}
                         </p>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-gray-400 mb-3">
                             {vehicle.model} • {vehicle.capacity} Seats
                         </p>
+
+                        <div className="pt-3 border-t border-gray-100 space-y-2">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs text-gray-500">Permit Expiry</span>
+                                {(() => {
+                                    const status = getExpiryStatus(vehicle.permit_expiry);
+                                    return status ? (
+                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${status.color}`}>
+                                            {status.label}
+                                        </span>
+                                    ) : <span className="text-gray-400 text-[10px]">Pending</span>
+                                })()}
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs text-gray-500">Insurance Expiry</span>
+                                {(() => {
+                                    const status = getExpiryStatus(vehicle.insurance_expiry);
+                                    return status ? (
+                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${status.color}`}>
+                                            {status.label}
+                                        </span>
+                                    ) : <span className="text-gray-400 text-[10px]">Pending</span>
+                                })()}
+                            </div>
+                        </div>
                     </div>
                 ))}
             </div>
@@ -152,6 +192,32 @@ const Vehicles = () => {
                                     value={formData.capacity}
                                     onChange={e => setFormData({ ...formData, capacity: parseInt(e.target.value) })}
                                 />
+                            </div>
+
+                            <div className="bg-gray-50 p-4 rounded-lg space-y-4">
+                                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                                    <ShieldCheck className="h-3 w-3" /> Vehicle Compliance
+                                </p>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-[11px] font-bold text-gray-600 mb-1 uppercase">Permit Expiry</label>
+                                        <input
+                                            type="date"
+                                            className="w-full px-3 py-1.5 border rounded-lg text-sm"
+                                            value={formData.permit_expiry}
+                                            onChange={e => setFormData({ ...formData, permit_expiry: e.target.value })}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[11px] font-bold text-gray-600 mb-1 uppercase">Insurance Expiry</label>
+                                        <input
+                                            type="date"
+                                            className="w-full px-3 py-1.5 border rounded-lg text-sm"
+                                            value={formData.insurance_expiry}
+                                            onChange={e => setFormData({ ...formData, insurance_expiry: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
                             </div>
                             <div className="flex gap-3 pt-4">
                                 <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-2 border rounded-lg hover:bg-gray-50">Cancel</button>

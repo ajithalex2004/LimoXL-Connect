@@ -24,8 +24,11 @@ func NewPostgresDriverRepo(db *sql.DB) *PostgresDriverRepo {
 
 func (r *PostgresDriverRepo) Create(ctx context.Context, driver *models.Driver) error {
 	query := `
-		INSERT INTO drivers (id, company_id, name, contact_number, license_number, created_at)
-		VALUES ($1, $2, $3, $4, $5, $6)
+		INSERT INTO drivers (
+			id, company_id, name, contact_number, license_number, 
+			license_expiry, itc_permit_expiry, visa_expiry, created_at
+		)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 	`
 	driver.ID = uuid.New()
 	driver.CreatedAt = time.Now()
@@ -36,6 +39,9 @@ func (r *PostgresDriverRepo) Create(ctx context.Context, driver *models.Driver) 
 		driver.Name,
 		driver.Phone, // Maps to contact_number
 		driver.LicenseNumber,
+		driver.LicenseExpiry,
+		driver.ITCPermitExpiry,
+		driver.VisaExpiry,
 		driver.CreatedAt,
 	)
 	return err
@@ -43,7 +49,10 @@ func (r *PostgresDriverRepo) Create(ctx context.Context, driver *models.Driver) 
 
 func (r *PostgresDriverRepo) ListByCompany(ctx context.Context, companyID uuid.UUID) ([]models.Driver, error) {
 	query := `
-		SELECT id, company_id, name, contact_number, license_number, assigned_vehicle_id, created_at
+		SELECT 
+			id, company_id, name, contact_number, license_number, 
+			license_expiry, itc_permit_expiry, visa_expiry,
+			assigned_vehicle_id, created_at
 		FROM drivers 
 		WHERE company_id = $1
 	`
@@ -59,7 +68,9 @@ func (r *PostgresDriverRepo) ListByCompany(ctx context.Context, companyID uuid.U
 		var d models.Driver
 		var phone, license, vehicleID sql.NullString
 		if err := rows.Scan(
-			&d.ID, &d.CompanyID, &d.Name, &phone, &license, &vehicleID, &d.CreatedAt,
+			&d.ID, &d.CompanyID, &d.Name, &phone, &license,
+			&d.LicenseExpiry, &d.ITCPermitExpiry, &d.VisaExpiry,
+			&vehicleID, &d.CreatedAt,
 		); err != nil {
 			return nil, err
 		}

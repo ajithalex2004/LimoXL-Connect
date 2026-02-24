@@ -22,8 +22,11 @@ func (r *PostgresVehicleRepo) Create(ctx context.Context, vehicle *models.Vehicl
 	// For creation, we assume lat/lng might be nil or 0 initially.
 	// If provided, we insert. If not, we can leave geo null or 0,0.
 	query := `
-		INSERT INTO vehicles (id, company_id, license_plate, type, vehicle_class, vehicle_group, model, capacity, status, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+		INSERT INTO vehicles (
+			id, company_id, license_plate, type, vehicle_class, vehicle_group, 
+			model, capacity, status, permit_expiry, insurance_expiry, created_at, updated_at
+		)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
 	`
 	vehicle.ID = uuid.New()
 	vehicle.CreatedAt = time.Now()
@@ -39,6 +42,8 @@ func (r *PostgresVehicleRepo) Create(ctx context.Context, vehicle *models.Vehicl
 		vehicle.Model,
 		vehicle.Capacity,
 		vehicle.Status,
+		vehicle.PermitExpiry,
+		vehicle.InsuranceExpiry,
 		vehicle.CreatedAt,
 		vehicle.UpdatedAt,
 	)
@@ -50,6 +55,7 @@ func (r *PostgresVehicleRepo) GetByID(ctx context.Context, id uuid.UUID) (*model
 	query := `
 		SELECT 
 			id, company_id, license_plate, type, vehicle_class, vehicle_group, model, capacity, status, 
+			permit_expiry, insurance_expiry,
 			ST_Y(current_location::geometry) as lat, ST_X(current_location::geometry) as lng, 
 			last_heartbeat, created_at, updated_at 
 		FROM vehicles WHERE id = $1
@@ -63,6 +69,7 @@ func (r *PostgresVehicleRepo) GetByID(ctx context.Context, id uuid.UUID) (*model
 
 	err := row.Scan(
 		&v.ID, &v.CompanyID, &v.PlateNumber, &v.Type, &vClass, &vGroup, &vModel, &v.Capacity, &v.Status,
+		&v.PermitExpiry, &v.InsuranceExpiry,
 		&lat, &lng,
 		&v.LastHeartbeat, &v.CreatedAt, &v.UpdatedAt,
 	)
@@ -89,6 +96,7 @@ func (r *PostgresVehicleRepo) ListByCompany(ctx context.Context, companyID uuid.
 	query := `
 		SELECT 
 			id, company_id, license_plate, type, vehicle_class, vehicle_group, model, capacity, status, 
+			permit_expiry, insurance_expiry,
 			ST_Y(current_location::geometry) as lat, ST_X(current_location::geometry) as lng, 
 			last_heartbeat, created_at, updated_at 
 		FROM vehicles WHERE company_id = $1
@@ -107,6 +115,7 @@ func (r *PostgresVehicleRepo) ListByCompany(ctx context.Context, companyID uuid.
 		var lat, lng sql.NullFloat64
 		if err := rows.Scan(
 			&v.ID, &v.CompanyID, &v.PlateNumber, &v.Type, &vClass, &vGroup, &vModel, &v.Capacity, &v.Status,
+			&v.PermitExpiry, &v.InsuranceExpiry,
 			&lat, &lng,
 			&v.LastHeartbeat, &v.CreatedAt, &v.UpdatedAt,
 		); err != nil {
