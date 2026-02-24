@@ -10,6 +10,9 @@ interface OutsourceCompany {
     contact_number?: string;
     city?: string;
     country?: string;
+    trade_license_no?: string;
+    itc_permit_no?: string;
+    vat_no?: string;
     is_active: boolean;
     created_at: string;
 }
@@ -31,6 +34,9 @@ const OutsourceMaster = () => {
         address: '',
         city: '',
         country: '',
+        trade_license_no: '',
+        itc_permit_no: '',
+        vat_no: '',
     });
 
     useEffect(() => {
@@ -75,6 +81,9 @@ const OutsourceMaster = () => {
                 address: '',
                 city: '',
                 country: '',
+                trade_license_no: '',
+                itc_permit_no: '',
+                vat_no: '',
             });
             fetchCompanies();
         } catch (error: any) {
@@ -95,6 +104,9 @@ const OutsourceMaster = () => {
             address: '',
             city: company.city || '',
             country: company.country || '',
+            trade_license_no: company.trade_license_no || '',
+            itc_permit_no: company.itc_permit_no || '',
+            vat_no: company.vat_no || '',
         });
         setCreateModalOpen(true);
     };
@@ -205,6 +217,14 @@ const OutsourceMaster = () => {
                                         <span>{[company.city, company.country].filter(Boolean).join(', ')}</span>
                                     </div>
                                 )}
+                                <div className="pt-2 mt-2 border-t border-gray-100 flex flex-wrap gap-2">
+                                    {company.trade_license_no && (
+                                        <span className="text-[10px] font-bold bg-blue-50 text-blue-700 px-2 py-0.5 rounded uppercase">TL: {company.trade_license_no}</span>
+                                    )}
+                                    {company.vat_no && (
+                                        <span className="text-[10px] font-bold bg-purple-50 text-purple-700 px-2 py-0.5 rounded uppercase">VAT: {company.vat_no}</span>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     ))}
@@ -322,6 +342,45 @@ const OutsourceMaster = () => {
                                         value={formData.country}
                                         onChange={handleChange}
                                     />
+                                </div>
+
+                                <div className="col-span-2 pt-2">
+                                    <h3 className="text-sm font-bold text-gray-900 border-b pb-2 mb-4">B2B Compliance Information</h3>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Trade License No</label>
+                                            <input
+                                                name="trade_license_no"
+                                                type="text"
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-amber-50/30"
+                                                placeholder="TL-12345"
+                                                value={formData.trade_license_no}
+                                                onChange={handleChange}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">VAT Number</label>
+                                            <input
+                                                name="vat_no"
+                                                type="text"
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-amber-50/30"
+                                                placeholder="100XXXXXXXXXXXX"
+                                                value={formData.vat_no}
+                                                onChange={handleChange}
+                                            />
+                                        </div>
+                                        <div className="col-span-2">
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">ITC Permit Number</label>
+                                            <input
+                                                name="itc_permit_no"
+                                                type="text"
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 bg-amber-50/30"
+                                                placeholder="ITC-67890"
+                                                value={formData.itc_permit_no}
+                                                onChange={handleChange}
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 

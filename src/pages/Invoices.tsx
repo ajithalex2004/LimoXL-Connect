@@ -186,8 +186,10 @@ const Invoices = () => {
                                         <tr>
                                             <th className="px-6 py-3 font-semibold text-gray-900">Invoice #</th>
                                             <th className="px-6 py-3 font-semibold text-gray-900">Trip Ref</th>
-                                            <th className="px-6 py-3 font-semibold text-gray-900">Submitted Date</th>
-                                            <th className="px-6 py-3 font-semibold text-gray-900">Amount</th>
+                                            <th className="px-6 py-3 font-semibold text-gray-900">Gross</th>
+                                            <th className="px-6 py-3 font-semibold text-gray-900">Fee (10%)</th>
+                                            <th className="px-6 py-3 font-semibold text-gray-900">VAT (5%)</th>
+                                            <th className="px-6 py-3 font-semibold text-gray-900">Net Payout</th>
                                             <th className="px-6 py-3 font-semibold text-gray-900">Status</th>
                                             <th className="px-6 py-3 font-semibold text-gray-900 text-right">Actions</th>
                                         </tr>
@@ -197,11 +199,11 @@ const Invoices = () => {
                                             <tr key={inv.id} className="hover:bg-gray-50">
                                                 <td className="px-6 py-4 font-medium text-gray-900">{inv.invoice_number}</td>
                                                 <td className="px-6 py-4 text-gray-600">{inv.booking_reference}</td>
-                                                <td className="px-6 py-4 text-gray-600">
-                                                    {new Date(inv.created_at).toLocaleDateString()}
-                                                </td>
-                                                <td className="px-6 py-4 font-mono font-medium text-gray-900">
-                                                    AED {inv.amount.toFixed(2)}
+                                                <td className="px-6 py-4 text-gray-600 font-medium">AED {inv.amount.toFixed(2)}</td>
+                                                <td className="px-6 py-4 text-red-500 font-medium whitespace-nowrap">- AED {inv.platform_fee?.toFixed(2) || '0.00'}</td>
+                                                <td className="px-6 py-4 text-blue-500 font-medium whitespace-nowrap">+ AED {inv.vat_amount?.toFixed(2) || '0.00'}</td>
+                                                <td className="px-6 py-4 font-bold text-gray-900 bg-emerald-50/50 whitespace-nowrap">
+                                                    AED {inv.net_payout?.toFixed(2) || inv.amount.toFixed(2)}
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${inv.status === 'PAID'
@@ -284,6 +286,27 @@ const Invoices = () => {
                                     onChange={e => setInvoiceForm({ ...invoiceForm, amount: parseFloat(e.target.value) })}
                                 />
                             </div>
+
+                            {invoiceForm.amount > 0 && (
+                                <div className="bg-gray-50 p-4 rounded-lg space-y-2 border border-gray-200">
+                                    <div className="flex justify-between text-sm text-gray-600">
+                                        <span>Gross Amount:</span>
+                                        <span>AED {invoiceForm.amount.toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm text-red-600">
+                                        <span>Platform Fee (10%):</span>
+                                        <span>- AED {(invoiceForm.amount * 0.1).toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm text-emerald-600">
+                                        <span>VAT Amount (5%):</span>
+                                        <span>+ AED {(invoiceForm.amount * 0.05).toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between font-bold text-gray-900 border-t pt-2 mt-2">
+                                        <span>Estimated Payout:</span>
+                                        <span>AED {(invoiceForm.amount - (invoiceForm.amount * 0.1) + (invoiceForm.amount * 0.05)).toFixed(2)}</span>
+                                    </div>
+                                </div>
+                            )}
                             <div className="flex gap-3 pt-4">
                                 <button
                                     type="button"
