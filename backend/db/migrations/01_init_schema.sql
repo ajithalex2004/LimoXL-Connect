@@ -152,6 +152,8 @@ CREATE TABLE IF NOT EXISTS invoices (
 
 -- Targeted Dispatch Enhancements
 ALTER TABLE trips ADD COLUMN IF NOT EXISTS visibility VARCHAR(50) DEFAULT 'PUBLIC' CHECK (visibility IN ('PUBLIC', 'DIRECT'));
+ALTER TABLE trips ADD COLUMN IF NOT EXISTS pickup_landmark VARCHAR(255);
+ALTER TABLE trips ADD COLUMN IF NOT EXISTS dropoff_landmark VARCHAR(255);
 
 CREATE TABLE IF NOT EXISTS trip_access (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -169,3 +171,32 @@ ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS capacity INT DEFAULT 4;    -- Miss
 
 -- Driver Fields Update
 ALTER TABLE drivers ADD COLUMN IF NOT EXISTS company_id UUID; -- Critical for partner isolation
+-- Companies Table Updates
+ALTER TABLE companies ADD COLUMN IF NOT EXISTS trade_license_no VARCHAR(100);
+ALTER TABLE companies ADD COLUMN IF NOT EXISTS itc_permit_no VARCHAR(100);
+ALTER TABLE companies ADD COLUMN IF NOT EXISTS vat_no VARCHAR(100);
+ALTER TABLE companies ADD COLUMN IF NOT EXISTS sla_score FLOAT DEFAULT 100.0;
+ALTER TABLE companies ADD COLUMN IF NOT EXISTS rating FLOAT DEFAULT 5.0;
+ALTER TABLE companies ADD COLUMN IF NOT EXISTS verification_status VARCHAR(50) DEFAULT 'PENDING' CHECK (verification_status IN ('PENDING', 'APPROVED', 'REJECTED'));
+
+-- Vehicles Table Updates
+ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS permit_expiry TIMESTAMP WITH TIME ZONE;
+ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS insurance_expiry TIMESTAMP WITH TIME ZONE;
+
+-- Drivers Table Updates
+ALTER TABLE drivers ADD COLUMN IF NOT EXISTS license_expiry TIMESTAMP WITH TIME ZONE;
+ALTER TABLE drivers ADD COLUMN IF NOT EXISTS itc_permit_expiry TIMESTAMP WITH TIME ZONE;
+ALTER TABLE drivers ADD COLUMN IF NOT EXISTS visa_expiry TIMESTAMP WITH TIME ZONE;
+
+-- Invoices Table Updates
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS platform_fee DECIMAL(10, 2) DEFAULT 0.0;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS vat_amount DECIMAL(10, 2) DEFAULT 0.0;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS net_payout DECIMAL(10, 2) DEFAULT 0.0;
+
+-- Idempotent check for old invoices table reference (trip_invoices was used in code)
+DO $$ 
+BEGIN
+    IF EXISTS (SELECT FROM pg_tables WHERE tablename = 'invoices') AND NOT EXISTS (SELECT FROM pg_tables WHERE tablename = 'trip_invoices') THEN
+        ALTER TABLE invoices RENAME TO trip_invoices;
+    END IF;
+END $$;

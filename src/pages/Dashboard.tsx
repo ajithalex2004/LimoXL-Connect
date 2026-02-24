@@ -190,13 +190,13 @@ const Dashboard = () => {
 
                                             <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-xs text-gray-500 pt-1">
                                                 <div>
-                                                    <span className="font-medium text-gray-700">Pickup:</span> {item.pickup_zone}
+                                                    <span className="font-medium text-gray-700">Pickup:</span> {item.pickup_zone} {item.pickup_landmark && <span className="text-gray-400 font-normal">({item.pickup_landmark})</span>}
                                                     <div className="ml-1 text-gray-400">
                                                         {new Date(item.pickup_time).toLocaleDateString()}
                                                     </div>
                                                 </div>
                                                 <div>
-                                                    <span className="font-medium text-gray-700">Dropoff:</span> {item.dropoff_zone}
+                                                    <span className="font-medium text-gray-700">Dropoff:</span> {item.dropoff_zone} {item.dropoff_landmark && <span className="text-gray-400 font-normal">({item.dropoff_landmark})</span>}
                                                     <div className="ml-1 text-green-600 font-medium mt-1">
                                                         {item.status.replace('_', ' ')}
                                                     </div>
@@ -259,8 +259,8 @@ const Dashboard = () => {
                                         <tr key={trip.id}>
                                             <td className="px-4 py-2 text-sm font-bold text-gray-900">{trip.booking_reference}</td>
                                             <td className="px-4 py-2 text-sm text-gray-600">
-                                                <div>{trip.pickup_zone}</div>
-                                                <div className="text-gray-400">to {trip.dropoff_zone}</div>
+                                                <div>{trip.pickup_zone} {trip.pickup_landmark && <span className="text-gray-400">({trip.pickup_landmark})</span>}</div>
+                                                <div className="text-gray-400">to {trip.dropoff_zone} {trip.dropoff_landmark && <span>({trip.dropoff_landmark})</span>}</div>
                                             </td>
                                             <td className="px-4 py-2 text-sm text-gray-600">{trip.passenger_name}</td>
                                             <td className="px-4 py-2">
@@ -303,10 +303,12 @@ const Dashboard = () => {
                                 <div>
                                     <span className="text-gray-500 block text-xs uppercase tracking-wide">Pickup</span>
                                     <span className="font-medium text-gray-900">{quotingTrip.pickup_zone}</span>
+                                    {quotingTrip.pickup_landmark && <span className="text-xs text-gray-400 block">{quotingTrip.pickup_landmark}</span>}
                                 </div>
                                 <div>
                                     <span className="text-gray-500 block text-xs uppercase tracking-wide">Dropoff</span>
                                     <span className="font-medium text-gray-900">{quotingTrip.dropoff_zone}</span>
+                                    {quotingTrip.dropoff_landmark && <span className="text-xs text-gray-400 block">{quotingTrip.dropoff_landmark}</span>}
                                 </div>
                                 <div>
                                     <span className="text-gray-500 block text-xs uppercase tracking-wide">Date & Time</span>

@@ -17,6 +17,8 @@ export interface Trip {
     requested_vehicle_class?: string;
     requested_vehicle_group?: string;
     rfq_number?: string;
+    pickup_landmark?: string;
+    dropoff_landmark?: string;
     driver_link_token?: string;
     created_at?: string;
     updated_at?: string;
@@ -128,6 +130,8 @@ export interface Vehicle {
     model: string;
     capacity: number;
     status: string;
+    permit_expiry?: string;
+    insurance_expiry?: string;
 }
 
 export interface Driver {
@@ -136,6 +140,9 @@ export interface Driver {
     phone: string;
     license_number: string;
     current_vehicle_id?: string;
+    license_expiry?: string;
+    itc_permit_expiry?: string;
+    visa_expiry?: string;
 }
 
 export interface TripOffer {
@@ -244,6 +251,9 @@ export interface Invoice {
     supplier_company_id: string;
     invoice_number: string;
     amount: number;
+    platform_fee?: number;
+    vat_amount?: number;
+    net_payout?: number;
     status: 'PENDING' | 'PAID' | 'REJECTED' | 'CLOSED';
     created_at: string;
     booking_reference?: string;

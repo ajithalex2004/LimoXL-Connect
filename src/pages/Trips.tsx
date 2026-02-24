@@ -170,7 +170,10 @@ const Trips = () => {
                                     <div className="flex items-start gap-2">
                                         <MapPin className="h-4 w-4 text-green-600 mt-1 shrink-0" />
                                         <div>
-                                            <p className="text-sm font-medium text-gray-900">{trip.pickup_zone}</p>
+                                            <p className="text-sm font-medium text-gray-900">
+                                                {trip.pickup_zone}
+                                                {trip.pickup_landmark && <span className="text-gray-400 font-normal ml-1">({trip.pickup_landmark})</span>}
+                                            </p>
                                             <p className="text-xs text-gray-500">
                                                 {new Date(trip.pickup_time).toLocaleDateString()} {new Date(trip.pickup_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                             </p>
@@ -179,7 +182,10 @@ const Trips = () => {
                                     <div className="flex items-start gap-2">
                                         <MapPin className="h-4 w-4 text-red-600 mt-1 shrink-0" />
                                         <div>
-                                            <p className="text-sm font-medium text-gray-900">{trip.dropoff_zone}</p>
+                                            <p className="text-sm font-medium text-gray-900">
+                                                {trip.dropoff_zone}
+                                                {trip.dropoff_landmark && <span className="text-gray-400 font-normal ml-1">({trip.dropoff_landmark})</span>}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>

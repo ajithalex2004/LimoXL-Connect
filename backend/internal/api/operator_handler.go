@@ -37,6 +37,9 @@ type CreateOutsourceCompanyRequest struct {
 	Address       string `json:"address"`
 	City          string `json:"city"`
 	Country       string `json:"country"`
+	TradeLicense  string `json:"trade_license_no"`
+	ITCPermit     string `json:"itc_permit_no"`
+	VATNo         string `json:"vat_no"`
 }
 
 func (h *OperatorHandler) HandleCreateOutsourceCompany(w http.ResponseWriter, r *http.Request) {
@@ -56,6 +59,9 @@ func (h *OperatorHandler) HandleCreateOutsourceCompany(w http.ResponseWriter, r 
 		Address:       sql.NullString{String: req.Address, Valid: req.Address != ""},
 		City:          sql.NullString{String: req.City, Valid: req.City != ""},
 		Country:       sql.NullString{String: req.Country, Valid: req.Country != ""},
+		TradeLicense:  sql.NullString{String: req.TradeLicense, Valid: req.TradeLicense != ""},
+		ITCPermit:     sql.NullString{String: req.ITCPermit, Valid: req.ITCPermit != ""},
+		VATNo:         sql.NullString{String: req.VATNo, Valid: req.VATNo != ""},
 		IsActive:      true,
 	}
 
@@ -91,7 +97,9 @@ func (h *OperatorHandler) HandleListOutsourceCompanies(w http.ResponseWriter, r 
 		Address       *string  `json:"address,omitempty"`
 		City          *string  `json:"city,omitempty"`
 		Country       *string  `json:"country,omitempty"`
-		Specialties   []string `json:"specialties"`
+		TradeLicense  *string  `json:"trade_license_no,omitempty"`
+		ITCPermit     *string  `json:"itc_permit_no,omitempty"`
+		VATNo         *string  `json:"vat_no,omitempty"`
 		Rating        *float64 `json:"rating,omitempty"`
 		IsActive      bool     `json:"is_active"`
 		Notes         *string  `json:"notes,omitempty"`
@@ -102,12 +110,11 @@ func (h *OperatorHandler) HandleListOutsourceCompanies(w http.ResponseWriter, r 
 	response := make([]CompanyResponse, 0, len(companies))
 	for _, c := range companies {
 		cr := CompanyResponse{
-			ID:          c.ID.String(),
-			Name:        c.Name,
-			IsActive:    c.IsActive,
-			Specialties: c.Specialties,
-			CreatedAt:   c.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
-			UpdatedAt:   c.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),
+			ID:        c.ID.String(),
+			Name:      c.Name,
+			IsActive:  c.IsActive,
+			CreatedAt: c.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+			UpdatedAt: c.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),
 		}
 		if c.ContactPerson.Valid {
 			cr.ContactPerson = &c.ContactPerson.String
@@ -129,6 +136,15 @@ func (h *OperatorHandler) HandleListOutsourceCompanies(w http.ResponseWriter, r 
 		}
 		if c.Country.Valid {
 			cr.Country = &c.Country.String
+		}
+		if c.TradeLicense.Valid {
+			cr.TradeLicense = &c.TradeLicense.String
+		}
+		if c.ITCPermit.Valid {
+			cr.ITCPermit = &c.ITCPermit.String
+		}
+		if c.VATNo.Valid {
+			cr.VATNo = &c.VATNo.String
 		}
 		if c.Rating.Valid {
 			cr.Rating = &c.Rating.Float64

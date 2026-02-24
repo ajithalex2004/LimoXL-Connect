@@ -193,7 +193,7 @@ func (r *PostgresTripRepo) ListTrips(ctx context.Context) ([]models.Trip, error)
 		SELECT
 			id, reference_no, pickup_zone, dropoff_zone, pickup_time,
 			status, passenger_name, passenger_phone, vehicle_type_requested,
-			created_at, rfq_number
+			created_at, rfq_number, pickup_landmark, dropoff_landmark
 		FROM trips
 		WHERE requesting_company_id = $1
 		ORDER BY created_at DESC
@@ -207,10 +207,11 @@ func (r *PostgresTripRepo) ListTrips(ctx context.Context) ([]models.Trip, error)
 	var trips []models.Trip
 	for rows.Next() {
 		var t models.Trip
-		var pZone, dZone, pName, pPhone, vType, rfqNo sql.NullString
+		var pZone, dZone, pName, pPhone, vType, rfqNo, pLandmark, dLandmark sql.NullString
 		err := rows.Scan(
 			&t.ID, &t.BookingReference, &pZone, &dZone, &t.PickupTime,
 			&t.Status, &pName, &pPhone, &vType, &t.CreatedAt, &rfqNo,
+			&pLandmark, &dLandmark,
 		)
 		if err != nil {
 			return nil, err
@@ -221,6 +222,8 @@ func (r *PostgresTripRepo) ListTrips(ctx context.Context) ([]models.Trip, error)
 		t.PassengerPhone = pPhone.String
 		t.RequestedVehicleType = vType.String
 		t.RFQNumber = rfqNo.String
+		t.PickupLandmark = pLandmark.String
+		t.DropoffLandmark = dLandmark.String
 
 		// Fill mock data for now for missing fields in query but needed for UI
 		t.SupplierName = "N/A"
@@ -235,7 +238,7 @@ func (r *PostgresTripRepo) ListOpenRFQs(ctx context.Context, partnerID uuid.UUID
 		SELECT
 			t.id, t.reference_no, t.pickup_zone, t.dropoff_zone, t.pickup_time,
 			t.status, t.passenger_name, t.vehicle_type_requested, t.visibility,
-			t.created_at, t.rfq_number
+			t.created_at, t.rfq_number, t.pickup_landmark, t.dropoff_landmark
 		FROM trips t
 		LEFT JOIN trip_access ta ON t.id = ta.trip_id
 		WHERE t.status IN ('MARKETPLACE_SEARCH', 'OFFERED')
@@ -256,10 +259,11 @@ func (r *PostgresTripRepo) ListOpenRFQs(ctx context.Context, partnerID uuid.UUID
 	var trips []models.Trip
 	for rows.Next() {
 		var t models.Trip
-		var pZone, dZone, vType, rfqNo, pName, visibility sql.NullString // Handle potential nulls
+		var pZone, dZone, vType, rfqNo, pName, visibility, pLandmark, dLandmark sql.NullString // Handle potential nulls
 		err := rows.Scan(
 			&t.ID, &t.BookingReference, &pZone, &dZone, &t.PickupTime,
 			&t.Status, &pName, &vType, &visibility, &t.CreatedAt, &rfqNo,
+			&pLandmark, &dLandmark,
 		)
 		if err != nil {
 			return nil, err
@@ -270,6 +274,8 @@ func (r *PostgresTripRepo) ListOpenRFQs(ctx context.Context, partnerID uuid.UUID
 		t.RFQNumber = rfqNo.String
 		t.PassengerName = pName.String
 		t.Visibility = visibility.String
+		t.PickupLandmark = pLandmark.String
+		t.DropoffLandmark = dLandmark.String
 		// Defaults
 		t.RequestedVehicleClass = "Standard"
 		t.RequestedVehicleGroup = "Sedan"
@@ -344,7 +350,7 @@ func (r *PostgresTripRepo) ListPartnerTrips(ctx context.Context, partnerID uuid.
 		SELECT
 			id, reference_no, pickup_zone, dropoff_zone, pickup_time,
 			status, passenger_name, vehicle_type_requested, driver_link_token,
-			created_at, rfq_number
+			created_at, rfq_number, pickup_landmark, dropoff_landmark
 		FROM trips
 		WHERE fulfillment_company_id = $1
 		ORDER BY created_at DESC
@@ -362,10 +368,11 @@ func (r *PostgresTripRepo) ListPartnerTrips(ctx context.Context, partnerID uuid.
 	var trips []models.Trip
 	for rows.Next() {
 		var t models.Trip
-		var pZone, dZone, vType, dToken, rfqNo, pName sql.NullString
+		var pZone, dZone, vType, dToken, rfqNo, pName, pLandmark, dLandmark sql.NullString
 		err := rows.Scan(
 			&t.ID, &t.BookingReference, &pZone, &dZone, &t.PickupTime,
 			&t.Status, &pName, &vType, &dToken, &t.CreatedAt, &rfqNo,
+			&pLandmark, &dLandmark,
 		)
 		if err != nil {
 			return nil, err
@@ -514,7 +521,8 @@ func (r *PostgresTripRepo) GetTrip(ctx context.Context, id uuid.UUID) (*models.T
 	query := `
 		SELECT 
 			t.id, t.requesting_company_id, t.reference_no, t.pickup_zone, t.dropoff_zone, 
-			t.pickup_time::timestamp, t.status, t.vehicle_type_requested, t.passenger_name, t.rfq_number
+			t.pickup_time::timestamp, t.status, t.vehicle_type_requested, t.passenger_name, t.rfq_number,
+			t.pickup_landmark, t.dropoff_landmark
 		FROM trips t
 		WHERE t.id = $1
 	`
@@ -522,15 +530,18 @@ func (r *PostgresTripRepo) GetTrip(ctx context.Context, id uuid.UUID) (*models.T
 	row := r.DB.QueryRowContext(ctx, query, id)
 
 	var trip models.Trip
-	var rfqNo sql.NullString
+	var rfqNo, pLandmark, dLandmark sql.NullString
 	err := row.Scan(
 		&trip.ID, &trip.RequestingCompanyID, &trip.BookingReference, &trip.PickupZone, &trip.DropoffZone,
 		&trip.PickupTime, &trip.Status, &trip.RequestedVehicleType, &trip.PassengerName, &rfqNo,
+		&pLandmark, &dLandmark,
 	)
 	if err != nil {
 		return nil, err
 	}
 	trip.RFQNumber = rfqNo.String
+	trip.PickupLandmark = pLandmark.String
+	trip.DropoffLandmark = dLandmark.String
 	return &trip, nil
 }
 
@@ -586,11 +597,26 @@ func (r *PostgresTripRepo) RejectTripOffer(ctx context.Context, offerID uuid.UUI
 }
 
 func (r *PostgresTripRepo) SubmitInvoice(ctx context.Context, invoice models.Invoice) error {
+	// VAT is 5% in UAE usually
+	vatRate := 0.05
+	// Platform fee is 10% for demo
+	platformFeeRate := 0.10
+
+	invoice.VATAmount = invoice.Amount * vatRate
+	invoice.PlatformFee = invoice.Amount * platformFeeRate
+	invoice.NetPayout = invoice.Amount - invoice.PlatformFee + invoice.VATAmount
+
 	query := `
-		INSERT INTO trip_invoices (trip_id, supplier_company_id, invoice_number, amount, status, created_at)
-		VALUES ($1, $2, $3, $4, $5, NOW())
+		INSERT INTO trip_invoices (
+			trip_id, supplier_company_id, invoice_number, amount, 
+			platform_fee, vat_amount, net_payout, status, created_at
+		)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
 	`
-	_, err := r.DB.ExecContext(ctx, query, invoice.TripID, invoice.SupplierCompanyID, invoice.InvoiceNumber, invoice.Amount, invoice.Status)
+	_, err := r.DB.ExecContext(ctx, query,
+		invoice.TripID, invoice.SupplierCompanyID, invoice.InvoiceNumber, invoice.Amount,
+		invoice.PlatformFee, invoice.VATAmount, invoice.NetPayout, invoice.Status,
+	)
 	return err
 }
 
@@ -619,7 +645,7 @@ func (r *PostgresTripRepo) ListOperatorTrips(ctx context.Context, operatorID uui
 		SELECT
 			id, reference_no, pickup_zone, dropoff_zone, pickup_time,
 			status, passenger_name, passenger_phone, vehicle_type_requested,
-			created_at, rfq_number
+			created_at, rfq_number, pickup_landmark, dropoff_landmark
 		FROM trips
 		WHERE requesting_company_id = $1
 		ORDER BY created_at DESC
@@ -633,10 +659,11 @@ func (r *PostgresTripRepo) ListOperatorTrips(ctx context.Context, operatorID uui
 	var trips []models.Trip
 	for rows.Next() {
 		var t models.Trip
-		var pZone, dZone, pName, pPhone, vType, rfqNo sql.NullString
+		var pZone, dZone, pName, pPhone, vType, rfqNo, pLandmark, dLandmark sql.NullString
 		err := rows.Scan(
 			&t.ID, &t.BookingReference, &pZone, &dZone, &t.PickupTime,
 			&t.Status, &pName, &pPhone, &vType, &t.CreatedAt, &rfqNo,
+			&pLandmark, &dLandmark,
 		)
 		if err != nil {
 			return nil, err
@@ -647,6 +674,8 @@ func (r *PostgresTripRepo) ListOperatorTrips(ctx context.Context, operatorID uui
 		t.PassengerPhone = pPhone.String
 		t.RequestedVehicleType = vType.String
 		t.RFQNumber = rfqNo.String
+		t.PickupLandmark = pLandmark.String
+		t.DropoffLandmark = dLandmark.String
 		trips = append(trips, t)
 	}
 	return trips, nil
@@ -748,7 +777,10 @@ func (r *PostgresTripRepo) ListInvoices(ctx context.Context, partnerID uuid.UUID
 	for rows.Next() {
 		var inv models.Invoice
 		var ref string
-		err := rows.Scan(&inv.ID, &inv.TripID, &inv.InvoiceNumber, &inv.Amount, &inv.Status, &inv.CreatedAt, &ref)
+		err := rows.Scan(
+			&inv.ID, &inv.TripID, &inv.InvoiceNumber, &inv.Amount,
+			&inv.Status, &inv.CreatedAt, &ref,
+		)
 		if err != nil {
 			return nil, err
 		}
@@ -774,7 +806,8 @@ func (r *PostgresTripRepo) CreateTrip(ctx context.Context, trip *models.Trip) er
 			passenger_name, passenger_phone, 
 			pickup_time, status, vehicle_type_requested, 
 			pickup_location, dropoff_location,
-			price, created_at, updated_at
+			price, pickup_landmark, dropoff_landmark,
+			created_at, updated_at
 		) VALUES (
 			$1, $2, 'TR' || nextval('trip_id_seq'), 
 			$3, $4, 
@@ -782,7 +815,7 @@ func (r *PostgresTripRepo) CreateTrip(ctx context.Context, trip *models.Trip) er
 			$7, $8, $9,
 			ST_SetSRID(ST_MakePoint($10, $11), 4326),
 			ST_SetSRID(ST_MakePoint($12, $13), 4326),
-			$14, $15, $16
+			$14, $15, $16, $17, $18
 		)
 	`
 	_, err := r.DB.ExecContext(ctx, query,
@@ -792,7 +825,8 @@ func (r *PostgresTripRepo) CreateTrip(ctx context.Context, trip *models.Trip) er
 		trip.PickupTime, trip.Status, trip.RequestedVehicleType, // $7, $8, $9
 		defaultLng, defaultLat, // $10, $11
 		defaultLng, defaultLat, // $12, $13
-		trip.Price, trip.CreatedAt, trip.UpdatedAt, // $14, $15, $16
+		trip.Price, trip.PickupLandmark, trip.DropoffLandmark, // $14, $15, $16
+		trip.CreatedAt, trip.UpdatedAt, // $17, $18
 	)
 	return err
 }

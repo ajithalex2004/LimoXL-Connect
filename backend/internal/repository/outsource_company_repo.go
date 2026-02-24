@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/lib/pq"
 )
 
 type OutsourceCompany struct {
@@ -19,8 +18,12 @@ type OutsourceCompany struct {
 	Address       sql.NullString  `json:"address"`
 	City          sql.NullString  `json:"city"`
 	Country       sql.NullString  `json:"country"`
-	Specialties   []string        `json:"specialties"`
+	TradeLicense  sql.NullString  `json:"trade_license_no"`
+	ITCPermit     sql.NullString  `json:"itc_permit_no"`
+	VATNo         sql.NullString  `json:"vat_no"`
+	SLAScore      float64         `json:"sla_score"`
 	Rating        sql.NullFloat64 `json:"rating"`
+	Status        string          `json:"verification_status"`
 	IsActive      bool            `json:"is_active"`
 	Notes         sql.NullString  `json:"notes"`
 	CreatedAt     time.Time       `json:"created_at"`
@@ -40,8 +43,9 @@ func (r *OutsourceCompanyRepo) Create(ctx context.Context, company *OutsourceCom
 	query := `
 		INSERT INTO outsource_companies (
 			id, name, contact_person, designation, email, contact_number,
-			address, city, country, specialties, rating, is_active, notes
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+			address, city, country, trade_license_no, itc_permit_no, vat_no,
+			rating, is_active, notes
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
 		RETURNING created_at, updated_at
 	`
 
@@ -59,7 +63,9 @@ func (r *OutsourceCompanyRepo) Create(ctx context.Context, company *OutsourceCom
 		company.Address,
 		company.City,
 		company.Country,
-		pq.Array(company.Specialties),
+		company.TradeLicense,
+		company.ITCPermit,
+		company.VATNo,
 		company.Rating,
 		company.IsActive,
 		company.Notes,
@@ -86,8 +92,12 @@ func (r *OutsourceCompanyRepo) GetByID(ctx context.Context, id uuid.UUID) (*Outs
 		&company.Address,
 		&company.City,
 		&company.Country,
-		pq.Array(&company.Specialties),
+		&company.TradeLicense,
+		&company.ITCPermit,
+		&company.VATNo,
+		&company.SLAScore,
 		&company.Rating,
+		&company.Status,
 		&company.IsActive,
 		&company.Notes,
 		&company.CreatedAt,
@@ -105,7 +115,8 @@ func (r *OutsourceCompanyRepo) GetByID(ctx context.Context, id uuid.UUID) (*Outs
 func (r *OutsourceCompanyRepo) List(ctx context.Context) ([]*OutsourceCompany, error) {
 	query := `
 		SELECT id, name, contact_person, designation, email, contact_number,
-		       address, city, country, specialties, rating, is_active, notes,
+		       address, city, country, trade_license_no, itc_permit_no, vat_no,
+		       sla_score, rating, status, is_active, notes,
 		       created_at, updated_at, deleted_at
 		FROM outsource_companies
 		WHERE deleted_at IS NULL
@@ -131,8 +142,12 @@ func (r *OutsourceCompanyRepo) List(ctx context.Context) ([]*OutsourceCompany, e
 			&company.Address,
 			&company.City,
 			&company.Country,
-			pq.Array(&company.Specialties),
+			&company.TradeLicense,
+			&company.ITCPermit,
+			&company.VATNo,
+			&company.SLAScore,
 			&company.Rating,
+			&company.Status,
 			&company.IsActive,
 			&company.Notes,
 			&company.CreatedAt,
@@ -153,7 +168,8 @@ func (r *OutsourceCompanyRepo) Update(ctx context.Context, company *OutsourceCom
 		UPDATE outsource_companies
 		SET name = $2, contact_person = $3, designation = $4, email = $5,
 		    contact_number = $6, address = $7, city = $8, country = $9,
-		    specialties = $10, rating = $11, is_active = $12, notes = $13,
+		    trade_license_no = $10, itc_permit_no = $11, vat_no = $12,
+		    rating = $13, is_active = $14, notes = $15,
 		    updated_at = CURRENT_TIMESTAMP
 		WHERE id = $1 AND deleted_at IS NULL
 	`
@@ -168,7 +184,9 @@ func (r *OutsourceCompanyRepo) Update(ctx context.Context, company *OutsourceCom
 		company.Address,
 		company.City,
 		company.Country,
-		pq.Array(company.Specialties),
+		company.TradeLicense,
+		company.ITCPermit,
+		company.VATNo,
 		company.Rating,
 		company.IsActive,
 		company.Notes,

@@ -169,7 +169,10 @@ const RFQs = () => {
                                     <div className="flex items-start gap-2 text-gray-900">
                                         <MapPin className="h-5 w-5 text-green-600 mt-0.5 shrink-0" />
                                         <div>
-                                            <p className="font-medium text-lg">{trip.pickup_zone}</p>
+                                            <p className="font-medium text-lg">
+                                                {trip.pickup_zone}
+                                                {trip.pickup_landmark && <span className="text-gray-400 font-normal text-sm ml-1">({trip.pickup_landmark})</span>}
+                                            </p>
                                             <p className="text-sm text-gray-500">
                                                 {formatTripDate(trip.pickup_time)}
                                             </p>
@@ -182,7 +185,10 @@ const RFQs = () => {
                                     <div className="flex items-start gap-2 text-gray-900">
                                         <MapPin className="h-5 w-5 text-red-600 mt-0.5 shrink-0" />
                                         <div>
-                                            <p className="font-medium text-lg">{trip.dropoff_zone}</p>
+                                            <p className="font-medium text-lg">
+                                                {trip.dropoff_zone}
+                                                {trip.dropoff_landmark && <span className="text-gray-400 font-normal text-sm ml-1">({trip.dropoff_landmark})</span>}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>

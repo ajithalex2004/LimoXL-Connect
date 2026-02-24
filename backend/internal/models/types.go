@@ -73,14 +73,20 @@ const (
 // Structs
 
 type Company struct {
-	ID          uuid.UUID       `db:"id" json:"id"`
-	Name        string          `db:"name" json:"name"`
-	Type        CompanyType     `db:"type" json:"type"`
-	ContactInfo json.RawMessage `db:"contact_info" json:"contact_info"` // JSONB
-	Verified    bool            `db:"verified" json:"verified"`
-	Settings    json.RawMessage `db:"settings" json:"settings"` // JSONB
-	CreatedAt   time.Time       `db:"created_at" json:"created_at"`
-	UpdatedAt   time.Time       `db:"updated_at" json:"updated_at"`
+	ID                 uuid.UUID       `db:"id" json:"id"`
+	Name               string          `db:"name" json:"name"`
+	Type               CompanyType     `db:"type" json:"type"`
+	ContactInfo        json.RawMessage `db:"contact_info" json:"contact_info"` // JSONB
+	Verified           bool            `db:"verified" json:"verified"`
+	TradeLicenseNo     string          `db:"trade_license_no" json:"trade_license_no"`
+	ITCPermitNo        string          `db:"itc_permit_no" json:"itc_permit_no"`
+	VATNo              string          `db:"vat_no" json:"vat_no"`
+	SLAScore           float64         `db:"sla_score" json:"sla_score"`
+	Rating             float64         `db:"rating" json:"rating"`
+	VerificationStatus string          `db:"verification_status" json:"verification_status"`
+	Settings           json.RawMessage `db:"settings" json:"settings"` // JSONB
+	CreatedAt          time.Time       `db:"created_at" json:"created_at"`
+	UpdatedAt          time.Time       `db:"updated_at" json:"updated_at"`
 }
 
 type User struct {
@@ -105,11 +111,13 @@ type Vehicle struct {
 	Capacity     int           `db:"capacity" json:"capacity"`
 	Status       VehicleStatus `db:"status" json:"status"`
 	// Basic Lat/Lng for now. PostGIS interaction will happen in Repo.
-	CurrentLat    *float64   `db:"current_lat" json:"lat,omitempty"` // Mapped via query usually
-	CurrentLng    *float64   `db:"current_lng" json:"lng,omitempty"`
-	LastHeartbeat *time.Time `db:"last_heartbeat" json:"last_heartbeat"`
-	CreatedAt     time.Time  `db:"created_at" json:"created_at"`
-	UpdatedAt     time.Time  `db:"updated_at" json:"updated_at"`
+	CurrentLat      *float64   `db:"current_lat" json:"lat,omitempty"` // Mapped via query usually
+	CurrentLng      *float64   `db:"current_lng" json:"lng,omitempty"`
+	PermitExpiry    *time.Time `db:"permit_expiry" json:"permit_expiry"`
+	InsuranceExpiry *time.Time `db:"insurance_expiry" json:"insurance_expiry"`
+	LastHeartbeat   *time.Time `db:"last_heartbeat" json:"last_heartbeat"`
+	CreatedAt       time.Time  `db:"created_at" json:"created_at"`
+	UpdatedAt       time.Time  `db:"updated_at" json:"updated_at"`
 }
 
 type Driver struct {
@@ -119,6 +127,9 @@ type Driver struct {
 	Phone            string        `db:"phone" json:"phone,omitempty"`
 	LicenseNumber    string        `db:"license_number" json:"license_number,omitempty"`
 	CurrentVehicleID uuid.NullUUID `db:"current_vehicle_id" json:"current_vehicle_id,omitempty"`
+	LicenseExpiry    *time.Time    `db:"license_expiry" json:"license_expiry"`
+	ITCPermitExpiry  *time.Time    `db:"itc_permit_expiry" json:"itc_permit_expiry"`
+	VisaExpiry       *time.Time    `db:"visa_expiry" json:"visa_expiry"`
 	CreatedAt        time.Time     `db:"created_at" json:"created_at"`
 }
 
@@ -143,6 +154,8 @@ type Trip struct {
 	RequestedVehicleGroup string     `db:"requested_vehicle_group" json:"requested_vehicle_group"` // e.g. Sedan, SUV
 	RFQNumber             string     `db:"rfq_number" json:"rfq_number,omitempty"`                 // New Field for RFQ ID
 	Visibility            string     `db:"visibility" json:"visibility"`                           // PUBLIC or DIRECT
+	PickupLandmark        string     `db:"pickup_landmark" json:"pickup_landmark,omitempty"`
+	DropoffLandmark       string     `db:"dropoff_landmark" json:"dropoff_landmark,omitempty"`
 	CreatedAt             time.Time  `db:"created_at" json:"created_at"`
 	UpdatedAt             time.Time  `db:"updated_at" json:"updated_at"`
 }
@@ -236,6 +249,9 @@ type Invoice struct {
 	SupplierCompanyID uuid.UUID     `db:"supplier_company_id" json:"supplier_company_id"`
 	InvoiceNumber     string        `db:"invoice_number" json:"invoice_number"`
 	Amount            float64       `db:"amount" json:"amount"`
+	PlatformFee       float64       `db:"platform_fee" json:"platform_fee"`
+	VATAmount         float64       `db:"vat_amount" json:"vat_amount"`
+	NetPayout         float64       `db:"net_payout" json:"net_payout"`
 	Status            InvoiceStatus `db:"status" json:"status"`
 	CreatedAt         time.Time     `db:"created_at" json:"created_at"`
 	UpdatedAt         time.Time     `db:"updated_at" json:"updated_at"`

@@ -1,4 +1,4 @@
-There should be provision to resubmit Invoice and Close Invoice.package main
+package main
 
 import (
 	"database/sql"

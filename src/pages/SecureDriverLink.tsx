@@ -16,6 +16,8 @@ interface TripDetails {
     passenger_name: string;
     passenger_phone: string;
     status: string;
+    pickup_landmark?: string;
+    dropoff_landmark?: string;
 }
 
 const SecureDriverLink = () => {
@@ -85,7 +87,10 @@ const SecureDriverLink = () => {
                             <MapPin className="h-5 w-5 text-green-600 mt-0.5 shrink-0" />
                             <div>
                                 <p className="text-sm font-medium text-gray-900">Pickup</p>
-                                <p className="text-gray-600">{trip.pickup_zone}</p>
+                                <p className="text-gray-600">
+                                    {trip.pickup_zone}
+                                    {trip.pickup_landmark && <span className="text-gray-400 font-normal ml-1">({trip.pickup_landmark})</span>}
+                                </p>
                                 <p className="text-xs text-gray-400 mt-1">
                                     {new Date(trip.pickup_time).toLocaleString()}
                                 </p>
@@ -96,7 +101,10 @@ const SecureDriverLink = () => {
                             <MapPin className="h-5 w-5 text-red-600 mt-0.5 shrink-0" />
                             <div>
                                 <p className="text-sm font-medium text-gray-900">Dropoff</p>
-                                <p className="text-gray-600">{trip.dropoff_zone}</p>
+                                <p className="text-gray-600">
+                                    {trip.dropoff_zone}
+                                    {trip.dropoff_landmark && <span className="text-gray-400 font-normal ml-1">({trip.dropoff_landmark})</span>}
+                                </p>
                             </div>
                         </div>
                     </div>

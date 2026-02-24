@@ -22,15 +22,17 @@ interface Company {
     type: string;
 }
 
-interface Vehicle {
-    id: string;
-    plate_number: string;
-    type: string;
+plate_number: string;
+type: string;
+permit_expiry ?: string;
+insurance_expiry ?: string;
 }
 
 interface Driver {
     id: string;
     name: string;
+    license_expiry?: string;
+    itc_permit_expiry?: string;
 }
 
 const Dispatch = () => {
@@ -61,7 +63,9 @@ const Dispatch = () => {
         pickup_zone: '',
         dropoff_zone: '',
         requested_vehicle_type: 'Sedan',
-        price: ''
+        price: '',
+        pickup_landmark: '',
+        dropoff_landmark: ''
     });
 
     useEffect(() => {
@@ -193,7 +197,9 @@ const Dispatch = () => {
                 pickup_zone: '',
                 dropoff_zone: '',
                 requested_vehicle_type: 'Sedan',
-                price: ''
+                price: '',
+                pickup_landmark: '',
+                dropoff_landmark: ''
             });
             loadTrips();
         } catch (error) {
@@ -258,9 +264,11 @@ const Dispatch = () => {
                                     <div className="flex flex-col gap-1">
                                         <span className="flex items-center gap-1">
                                             <MapPin className="h-3 w-3 text-green-600" /> {trip.pickup_zone}
+                                            {trip.pickup_landmark && <span className="text-gray-400 text-xs ml-1">({trip.pickup_landmark})</span>}
                                         </span>
                                         <span className="flex items-center gap-1">
                                             <MapPin className="h-3 w-3 text-red-600" /> {trip.dropoff_zone}
+                                            {trip.dropoff_landmark && <span className="text-gray-400 text-xs ml-1">({trip.dropoff_landmark})</span>}
                                         </span>
                                     </div>
                                 </td>
@@ -417,9 +425,15 @@ const Dispatch = () => {
                                     onChange={e => setSelectedVehicle(e.target.value)}
                                 >
                                     <option value="">Select Vehicle...</option>
-                                    {myVehicles.map(v => (
-                                        <option key={v.id} value={v.id}>{v.plate_number} - {v.type}</option>
-                                    ))}
+                                    {myVehicles.map(v => {
+                                        const isExpiring = v.permit_expiry && new Date(v.permit_expiry) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+                                        const isExpired = v.permit_expiry && new Date(v.permit_expiry) < new Date();
+                                        return (
+                                            <option key={v.id} value={v.id} className={isExpired ? 'text-red-600' : isExpiring ? 'text-amber-600' : ''}>
+                                                {v.plate_number} - {v.type} {isExpired ? '(EXPIRED)' : isExpiring ? '(EXPIRING SOON)' : ''}
+                                            </option>
+                                        );
+                                    })}
                                 </select>
                             </div>
                             <div>
@@ -430,9 +444,15 @@ const Dispatch = () => {
                                     onChange={e => setSelectedDriver(e.target.value)}
                                 >
                                     <option value="">Select Driver...</option>
-                                    {myDrivers.map(d => (
-                                        <option key={d.id} value={d.id}>{d.name}</option>
-                                    ))}
+                                    {myDrivers.map(d => {
+                                        const isExpiring = d.license_expiry && new Date(d.license_expiry) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+                                        const isExpired = d.license_expiry && new Date(d.license_expiry) < new Date();
+                                        return (
+                                            <option key={d.id} value={d.id} className={isExpired ? 'text-red-600' : isExpiring ? 'text-amber-600' : ''}>
+                                                {d.name} {isExpired ? '(EXPIRED)' : isExpiring ? '(EXPIRING SOON)' : ''}
+                                            </option>
+                                        );
+                                    })}
                                 </select>
                             </div>
                         </div>
@@ -487,7 +507,7 @@ const Dispatch = () => {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Pickup Address</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Pickup Address / Zone</label>
                                 <input
                                     type="text"
                                     required
@@ -498,7 +518,17 @@ const Dispatch = () => {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Dropoff Address</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Pickup Landmark (Internal)</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. Entrance 4, Level LG"
+                                    className="w-full px-3 py-2 border rounded-lg bg-blue-50/30 font-medium"
+                                    value={newTrip.pickup_landmark}
+                                    onChange={e => setNewTrip({ ...newTrip, pickup_landmark: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Dropoff Address / Zone</label>
                                 <input
                                     type="text"
                                     required
@@ -506,6 +536,16 @@ const Dispatch = () => {
                                     className="w-full px-3 py-2 border rounded-lg"
                                     value={newTrip.dropoff_zone}
                                     onChange={e => setNewTrip({ ...newTrip, dropoff_zone: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Dropoff Landmark (Internal)</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. Main Lobby Gate"
+                                    className="w-full px-3 py-2 border rounded-lg bg-blue-50/30 font-medium"
+                                    value={newTrip.dropoff_landmark}
+                                    onChange={e => setNewTrip({ ...newTrip, dropoff_landmark: e.target.value })}
                                 />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
