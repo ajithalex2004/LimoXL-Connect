@@ -12,7 +12,6 @@ import (
 
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
