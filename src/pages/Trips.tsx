@@ -40,9 +40,9 @@ const Trips = () => {
                 partnerService.listDrivers().catch(() => []),
                 partnerService.listVehicles().catch(() => [])
             ]);
-            setTrips(tripsData || []);
-            setDrivers(driversData || []);
-            setVehicles(vehiclesData || []);
+            setTrips(Array.isArray(tripsData) ? tripsData : []);
+            setDrivers(Array.isArray(driversData) ? driversData : []);
+            setVehicles(Array.isArray(vehiclesData) ? vehiclesData : []);
         } catch (error) {
             console.error("Failed to load data", error);
             setTrips([]);

@@ -27,8 +27,8 @@ const RFQs = () => {
                 partnerService.listRFQs(),
                 partnerService.listRFQHistory()
             ]);
-            setRfqs(openRfqs || []);
-            setHistoryTrips(history || []);
+            setRfqs(Array.isArray(openRfqs) ? openRfqs : []);
+            setHistoryTrips(Array.isArray(history) ? history : []);
         } catch (error) {
             console.error("Failed to load RFQs", error);
         } finally {
