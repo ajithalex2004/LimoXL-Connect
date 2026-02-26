@@ -1,0 +1,8 @@
+[phases.setup]
+nixPkgs = ["...", "go"]
+
+[phases.build]
+cmds = ["npm install", "npm run build", "cd backend && go build -o out cmd/server/main.go"]
+
+[start]
+cmd = "cd backend && ./out"
