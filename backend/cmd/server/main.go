@@ -8,9 +8,11 @@ import (
 	"limoxlink-backend/internal/repository"
 	"log"
 	"net/http"
+	"path/filepath"
 
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
@@ -95,12 +97,38 @@ func main() {
 	}))
 
 	// Public Routes
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Welcome to LimoXLink API"))
-	})
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("OK"))
 	})
+
+	// Serve Frontend Static Files
+	workDir, _ := os.Getwd()
+	// The dist folder will be at the root of the repo, one level up from backend/cmd/server
+	// In production, we expect it to be at /app/dist if root is /app
+	filesDir := http.Dir(filepath.Join(workDir, "..", "..", "dist"))
+
+	// Check if dist/index.html exists to confirm we should serve static files
+	if _, err := os.Stat(filepath.Join(workDir, "..", "..", "dist", "index.html")); err != nil {
+		log.Printf("Warning: Frontend dist/index.html not found at %s. Static file serving might fail.\n", filepath.Join(workDir, "..", "..", "dist", "index.html"))
+	}
+
+	r.Handle("/*", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// If it's an API route, Chi will handle it via the /api group below
+		if strings.HasPrefix(r.URL.Path, "/api") {
+			return
+		}
+
+		// Serve static files
+		path := filepath.Join(workDir, "..", "..", "dist", r.URL.Path)
+		_, err := os.Stat(path)
+		if os.IsNotExist(err) || r.URL.Path == "/" {
+			// Serve index.html for SPA routing or root
+			http.ServeFile(w, r, filepath.Join(workDir, "..", "..", "dist", "index.html"))
+			return
+		}
+
+		http.FileServer(filesDir).ServeHTTP(w, r)
+	}))
 
 	r.Route("/api", func(r chi.Router) {
 		// Auth
