@@ -35,7 +35,15 @@ const Dashboard = () => {
             const safeAssignedTrips = assignedTrips || [];
 
             // Filter out already accepted RFQs from the RFQ list (client-side specific logic)
-            const acceptedIds = JSON.parse(localStorage.getItem('accepted_activities') || '[]');
+            let acceptedIds = [];
+            try {
+                const stored = localStorage.getItem('accepted_activities');
+                if (stored && stored !== 'undefined') {
+                    acceptedIds = JSON.parse(stored);
+                }
+            } catch (e) {
+                console.error("Failed to parse accepted_activities", e);
+            }
             const newRfqs = safeRfqs.filter(t => !acceptedIds.includes(t.id));
 
             // Merge: RFQs first, then Assigned Trips, but remove duplicates by ID

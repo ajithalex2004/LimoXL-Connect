@@ -25,10 +25,22 @@ interface AuthState {
     logout: () => void;
 }
 
+// Helper to safely parse JSON from localStorage
+const safeParse = (key: string, fallback: any) => {
+    try {
+        const item = localStorage.getItem(key);
+        if (item === null || item === 'undefined') return fallback;
+        return JSON.parse(item);
+    } catch (e) {
+        console.error(`Error parsing localStorage key "${key}":`, e);
+        return fallback;
+    }
+};
+
 // Auth Store
 export const useAuthStore = create<AuthState>((set) => ({
     token: localStorage.getItem('token'),
-    user: JSON.parse(localStorage.getItem('user') || 'null'),
+    user: safeParse('user', null),
     isAuthenticated: !!localStorage.getItem('token'),
 
     login: (token, user) => {
@@ -61,7 +73,7 @@ if (typeof window !== 'undefined') {
         if (e.key === 'user' || e.key === 'token') {
             // Another tab changed the auth state
             const newToken = localStorage.getItem('token');
-            const newUser = JSON.parse(localStorage.getItem('user') || 'null');
+            const newUser = safeParse('user', null);
 
             // Update the store to reflect the change
             useAuthStore.setState({
