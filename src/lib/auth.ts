@@ -38,31 +38,38 @@ const safeParse = (key: string, fallback: any) => {
 };
 
 // Auth Store
-export const useAuthStore = create<AuthState>((set) => ({
-    token: localStorage.getItem('token'),
-    user: safeParse('user', null),
-    isAuthenticated: !!localStorage.getItem('token'),
+export const useAuthStore = create<AuthState>((set) => {
+    const token = localStorage.getItem('token');
+    const user = safeParse('user', null);
 
-    login: (token, user) => {
-        console.log('DEBUG: Store login called with:', { token: !!token, user });
-        if (!token || !user) {
-            console.error('DEBUG: login called with missing data, aborting save');
-            return;
-        }
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(user));
-        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        set({ token, user, isAuthenticated: true });
+    return {
+        token,
+        user,
+        isAuthenticated: !!token && !!user,
+
+        login: (token, user) => {
+            console.log('DEBUG: Store login called with:', { token: !!token, user });
+            if (!token || !user) {
+                console.error('DEBUG: login called with missing data, aborting save');
+                return;
+            }
+            localStorage.setItem('token', token);
+            localStorage.setItem('user', JSON.stringify(user));
+            api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            set({ token, user, isAuthenticated: true });
+        },
+
     },
 
-    logout: () => {
-        console.log('DEBUG: Store logout called');
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        delete api.defaults.headers.common['Authorization'];
-        set({ token: null, user: null, isAuthenticated: false });
-    },
-}));
+        logout: () => {
+            console.log('DEBUG: Store logout called');
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            delete api.defaults.headers.common['Authorization'];
+            set({ token: null, user: null, isAuthenticated: false });
+        },
+    };
+});
 
 // Add interceptor to attach token to requests
 api.interceptors.request.use((config) => {

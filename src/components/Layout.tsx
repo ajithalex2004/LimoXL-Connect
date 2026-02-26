@@ -19,8 +19,15 @@ import ChangePasswordModal from './ChangePasswordModal';
 
 const Layout = () => {
     const navigate = useNavigate();
-    const { logout, user } = useAuthStore();
+    const { logout, user, isAuthenticated } = useAuthStore();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+
+    React.useEffect(() => {
+        if (!isAuthenticated) {
+            console.warn('Layout: Not authenticated, redirecting to login');
+            navigate('/login');
+        }
+    }, [isAuthenticated, navigate]);
 
     const handleLogout = () => {
         logout();
