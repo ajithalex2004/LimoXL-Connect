@@ -95,44 +95,12 @@ func main() {
 		MaxAge:           300,
 	}))
 
-	// Public Routes
+	// Public / Health Routes
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("OK"))
 	})
 
-	// Serve Frontend Static Files
-	workDir, _ := os.Getwd()
-	// The binary is running from /app/backend, and dist is at /app/dist
-	distPath := filepath.Join(workDir, "..", "dist")
-
-	// Check if dist/index.html exists to confirm we should serve static files
-	if _, err := os.Stat(filepath.Join(distPath, "index.html")); err != nil {
-		log.Printf("Warning: Frontend dist/index.html not found at %s. Static file serving might fail.\n", filepath.Join(distPath, "index.html"))
-	}
-
-	filesDir := http.Dir(distPath)
-	fileServer := http.FileServer(filesDir)
-
-	r.Handle("/*", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// If it's an API route, Chi will handle it via the /api group below
-		if strings.HasPrefix(r.URL.Path, "/api") {
-			return
-		}
-
-		// Check if the requested file exists
-		path := filepath.Join(distPath, r.URL.Path)
-		info, err := os.Stat(path)
-
-		// If path doesn't exist OR is a directory (and not root), serve index.html for SPA
-		if os.IsNotExist(err) || (err == nil && info.IsDir()) {
-			http.ServeFile(w, r, filepath.Join(distPath, "index.html"))
-			return
-		}
-
-		// Otherwise serve the static file
-		fileServer.ServeHTTP(w, r)
-	}))
-
+	// API Routes
 	r.Route("/api", func(r chi.Router) {
 		// Auth
 		r.Post("/auth/login", authHandler.HandleLogin)
@@ -215,6 +183,30 @@ func main() {
 				w.Write([]byte("Authenticated"))
 			})
 		})
+	})
+
+	// Serve Frontend Static Files & SPA Fallback (only if no route matched)
+	workDir, _ := os.Getwd()
+	distPath := filepath.Join(workDir, "..", "dist")
+
+	if _, err := os.Stat(filepath.Join(distPath, "index.html")); err != nil {
+		log.Printf("Warning: Frontend dist/index.html not found at %s\n", filepath.Join(distPath, "index.html"))
+	}
+
+	filesDir := http.Dir(distPath)
+	fileServer := http.FileServer(filesDir)
+
+	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
+		// 1. Check if it's a physical file in dist
+		path := filepath.Join(distPath, r.URL.Path)
+		info, err := os.Stat(path)
+		if err == nil && !info.IsDir() {
+			fileServer.ServeHTTP(w, r)
+			return
+		}
+
+		// 2. Otherwise serve index.html for React SPA
+		http.ServeFile(w, r, filepath.Join(distPath, "index.html"))
 	})
 
 	port := os.Getenv("PORT")
