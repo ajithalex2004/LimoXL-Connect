@@ -30,16 +30,19 @@ const Dashboard = () => {
                 partnerService.listAssignedTrips()
             ]);
 
-            // Ensure arrays are not null (API determines null vs empty array behavior)
-            const safeRfqs = rfqs || [];
-            const safeAssignedTrips = assignedTrips || [];
+            // Ensure arrays are not null/undefined and ARE actual arrays
+            const safeRfqs = Array.isArray(rfqs) ? rfqs : [];
+            const safeAssignedTrips = Array.isArray(assignedTrips) ? assignedTrips : [];
 
             // Filter out already accepted RFQs from the RFQ list (client-side specific logic)
-            let acceptedIds = [];
+            let acceptedIds: string[] = [];
             try {
                 const stored = localStorage.getItem('accepted_activities');
                 if (stored && stored !== 'undefined') {
-                    acceptedIds = JSON.parse(stored);
+                    const parsed = JSON.parse(stored);
+                    if (Array.isArray(parsed)) {
+                        acceptedIds = parsed;
+                    }
                 }
             } catch (e) {
                 console.error("Failed to parse accepted_activities", e);
@@ -57,7 +60,8 @@ const Dashboard = () => {
                     return true;
                 })
                 .sort((a, b) =>
-                    new Date(b.created_at || b.pickup_time).getTime() - new Date(a.created_at || a.pickup_time).getTime()
+                    new Date(b.created_at || b.pickup_time || Date.now()).getTime() -
+                    new Date(a.created_at || a.pickup_time || Date.now()).getTime()
                 );
 
             // Filter for Dashboard "Recent RFQ Requests" (only New RFQs)
