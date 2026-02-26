@@ -102,14 +102,16 @@ func main() {
 
 	// Serve Frontend Static Files
 	workDir, _ := os.Getwd()
-	// The dist folder will be at the root of the repo, one level up from backend/cmd/server
-	// In production, we expect it to be at /app/dist if root is /app
-	filesDir := http.Dir(filepath.Join(workDir, "..", "..", "dist"))
+	// The binary is running from /app/backend, and dist is at /app/dist
+	distPath := filepath.Join(workDir, "..", "dist")
 
 	// Check if dist/index.html exists to confirm we should serve static files
-	if _, err := os.Stat(filepath.Join(workDir, "..", "..", "dist", "index.html")); err != nil {
-		log.Printf("Warning: Frontend dist/index.html not found at %s. Static file serving might fail.\n", filepath.Join(workDir, "..", "..", "dist", "index.html"))
+	if _, err := os.Stat(filepath.Join(distPath, "index.html")); err != nil {
+		log.Printf("Warning: Frontend dist/index.html not found at %s. Static file serving might fail.\n", filepath.Join(distPath, "index.html"))
 	}
+
+	filesDir := http.Dir(distPath)
+	fileServer := http.FileServer(filesDir)
 
 	r.Handle("/*", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// If it's an API route, Chi will handle it via the /api group below
@@ -117,16 +119,18 @@ func main() {
 			return
 		}
 
-		// Serve static files
-		path := filepath.Join(workDir, "..", "..", "dist", r.URL.Path)
-		_, err := os.Stat(path)
-		if os.IsNotExist(err) || r.URL.Path == "/" {
-			// Serve index.html for SPA routing or root
-			http.ServeFile(w, r, filepath.Join(workDir, "..", "..", "dist", "index.html"))
+		// Check if the requested file exists
+		path := filepath.Join(distPath, r.URL.Path)
+		info, err := os.Stat(path)
+
+		// If path doesn't exist OR is a directory (and not root), serve index.html for SPA
+		if os.IsNotExist(err) || (err == nil && info.IsDir()) {
+			http.ServeFile(w, r, filepath.Join(distPath, "index.html"))
 			return
 		}
 
-		http.FileServer(filesDir).ServeHTTP(w, r)
+		// Otherwise serve the static file
+		fileServer.ServeHTTP(w, r)
 	}))
 
 	r.Route("/api", func(r chi.Router) {
