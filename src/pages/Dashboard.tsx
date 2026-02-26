@@ -156,6 +156,7 @@ const Dashboard = () => {
             <div>
                 <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
                 <p className="text-gray-500">Welcome to Limo XL Connect {isOperator ? '(Operator Portal)' : '(Partner Portal)'}</p>
+                <p className="text-[10px] text-gray-300">Debug: Current Role is "{user?.role}"</p>
             </div>
 
             <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-${isOperator ? '3' : '4'} gap-4`}>
