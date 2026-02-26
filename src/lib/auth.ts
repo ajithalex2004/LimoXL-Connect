@@ -45,6 +45,10 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     login: (token, user) => {
         console.log('DEBUG: Store login called with:', { token: !!token, user });
+        if (!token || !user) {
+            console.error('DEBUG: login called with missing data, aborting save');
+            return;
+        }
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(user));
         api.defaults.headers.common['Authorization'] = `Bearer ${token}`;

@@ -18,11 +18,20 @@ const Login = () => {
         setLoading(true);
 
         try {
-            // In real app: await api.post('/auth/login', { email, password })
-            // Using the mock endpoint we created
+            console.log('DEBUG: Attempting login for:', email);
             const response = await api.post('/auth/login', { email, password });
+            console.log('DEBUG: Login response data:', response.data);
 
-            login(response.data.token, response.data.user);
+            // Handle potential case-sensitivity issues from backend
+            const token = response.data.token || response.data.Token;
+            const userData = response.data.user || response.data.User;
+
+            if (!userData) {
+                console.error('DEBUG: No user data found in response!', response.data);
+                throw new Error('User data missing from server response');
+            }
+
+            login(token, userData);
             navigate('/');
         } catch (err: any) {
             console.error(err);
