@@ -228,6 +228,16 @@ export const operatorService = {
             vehicle_id: vehicleId
         });
         return response.data;
+    },
+
+    listUsers: async () => {
+        const response = await api.get('/users');
+        return response.data;
+    },
+
+    createTeamMember: async (data: any) => {
+        const response = await api.post('/users', data);
+        return response.data;
     }
 };
 

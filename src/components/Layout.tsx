@@ -11,6 +11,7 @@ import {
     Building,
     Car,
     User,
+    Users,
     DollarSign
 } from 'lucide-react';
 import { useAuthStore } from '../lib/auth';
@@ -32,12 +33,18 @@ const Layout = () => {
 
         // Operator / Admin
         if (role === 'ADMIN' || role === 'OPS' || role === 'DISPATCHER') {
-            return [
+            const items = [
                 { name: 'Dashboard', path: '/', icon: LayoutDashboard },
                 { name: 'Trips', path: '/dispatch', icon: LayoutDashboard }, // Path remains same for now to avoid refactoring everything
                 { name: 'Outsource Companies', path: '/outsource-master', icon: Building }, // New route
                 { name: 'Submitted Quotes', path: '/quotes', icon: FileText },
             ];
+
+            if (role === 'ADMIN') {
+                items.splice(2, 0, { name: 'Team Management', path: '/team', icon: Users });
+            }
+
+            return items;
         }
 
         // Partner / Supplier

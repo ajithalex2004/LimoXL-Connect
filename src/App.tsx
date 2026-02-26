@@ -9,8 +9,7 @@ import Drivers from './pages/partner/Drivers';
 import Login from './pages/Login';
 import OutsourceMaster from './pages/operator/OutsourceMaster';
 import SubmittedQuotes from './pages/operator/SubmittedQuotes';
-import Dispatch from './pages/operator/Dispatch';
-import SecureDriverLink from './pages/SecureDriverLink';
+import TeamManagement from './pages/operator/TeamManagement';
 
 function App() {
     return (
@@ -28,6 +27,7 @@ function App() {
                     <Route path="outsource-master" element={<OutsourceMaster />} />
                     <Route path="dispatch" element={<Dispatch />} />
                     <Route path="quotes" element={<SubmittedQuotes />} />
+                    <Route path="team" element={<TeamManagement />} />
                 </Route>
                 <Route path="/login" element={<Login />} />
                 <Route path="/link/:token" element={<SecureDriverLink />} />

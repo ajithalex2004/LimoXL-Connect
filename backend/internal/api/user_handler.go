@@ -2,12 +2,14 @@ package api
 
 import (
 	"encoding/json"
+	"limoxlink-backend/internal/middleware"
 	"limoxlink-backend/internal/models"
 	"limoxlink-backend/internal/repository"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserHandler struct {
@@ -19,26 +21,56 @@ func NewUserHandler(repo repository.UserRepository) *UserHandler {
 }
 
 func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
-	var req models.User
+	var req struct {
+		models.User
+		Password string `json:"password"`
+	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	// Basic hash (TODO: Use bcrypt in real app, keeping simple for now as per plan/mock)
-	// Basic hash (TODO: Use bcrypt in real app, keeping simple for now as per plan/mock)
-	// req.PasswordHash = req.PasswordHash
-	// FIXME: Handle password hashing here properly. For MVP we assume it's passed as is or hashed by frontend (not secure).
-	// Actually, let's just not break the flow. Ideally handle password hashing here.
+	if req.Password != "" {
+		hashed, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+		if err != nil {
+			http.Error(w, "Failed to hash password", http.StatusInternalServerError)
+			return
+		}
+		req.User.PasswordHash = string(hashed)
+	}
 
-	if err := h.Repo.Create(r.Context(), &req); err != nil {
+	if err := h.Repo.Create(r.Context(), &req.User); err != nil {
 		http.Error(w, "Error creating user: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(req)
+	json.NewEncoder(w).Encode(req.User)
+}
+
+func (h *UserHandler) HandleListUsers(w http.ResponseWriter, r *http.Request) {
+	// Extract company ID from context (set by AuthMiddleware)
+	claims, ok := r.Context().Value(middleware.ClaimsKey).(*middleware.Claims)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	companyID, err := uuid.Parse(claims.CompanyID)
+	if err != nil {
+		http.Error(w, "Invalid company ID in token", http.StatusInternalServerError)
+		return
+	}
+
+	users, err := h.Repo.ListByCompany(r.Context(), companyID)
+	if err != nil {
+		http.Error(w, "Error listing users: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(users)
 }
 
 func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {

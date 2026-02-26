@@ -71,3 +71,26 @@ func (r *PostgresUserRepo) UpdatePassword(ctx context.Context, id uuid.UUID, has
 	_, err := r.DB.ExecContext(ctx, query, hash, false, id)
 	return err
 }
+
+func (r *PostgresUserRepo) ListByCompany(ctx context.Context, companyID uuid.UUID) ([]*models.User, error) {
+	query := `SELECT id, company_id, role, email, password_hash, name, password_change_required, created_at FROM users WHERE company_id = $1 ORDER BY created_at DESC`
+
+	rows, err := r.DB.QueryContext(ctx, query, companyID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []*models.User
+	for rows.Next() {
+		var u models.User
+		err := rows.Scan(
+			&u.ID, &u.CompanyID, &u.Role, &u.Email, &u.PasswordHash, &u.Name, &u.PasswordChangeRequired, &u.CreatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, &u)
+	}
+	return users, nil
+}

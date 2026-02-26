@@ -133,6 +133,10 @@ func main() {
 		r.Get("/companies/{id}", companyHandler.GetCompany)
 
 		// Users
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.AuthMiddleware)
+			r.Get("/users", userHandler.HandleListUsers)
+		})
 		r.Post("/users", userHandler.CreateUser)
 		r.Get("/users/{id}", userHandler.GetUser)
 
