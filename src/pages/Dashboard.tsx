@@ -156,7 +156,11 @@ const Dashboard = () => {
             <div>
                 <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
                 <p className="text-gray-500">Welcome to Limo XL Connect {isOperator ? '(Operator Portal)' : '(Partner Portal)'}</p>
-                <p className="text-[10px] text-gray-300">Debug: User Object is {JSON.stringify(user)}</p>
+                <div className="text-[10px] text-gray-300 space-y-1">
+                    <p>Debug [Store]: User is {JSON.stringify(user)}</p>
+                    <p>Debug [Storage]: Raw User is "{localStorage.getItem('user')}"</p>
+                    <p>Debug [Storage]: Raw Token exists: {!!localStorage.getItem('token') ? 'Yes' : 'No'}</p>
+                </div>
             </div>
 
             <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-${isOperator ? '3' : '4'} gap-4`}>

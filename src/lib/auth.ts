@@ -44,6 +44,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     isAuthenticated: !!localStorage.getItem('token'),
 
     login: (token, user) => {
+        console.log('DEBUG: Store login called with:', { token: !!token, user });
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(user));
         api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -51,6 +52,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     },
 
     logout: () => {
+        console.log('DEBUG: Store logout called');
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         delete api.defaults.headers.common['Authorization'];
@@ -71,6 +73,7 @@ api.interceptors.request.use((config) => {
 if (typeof window !== 'undefined') {
     window.addEventListener('storage', (e) => {
         if (e.key === 'user' || e.key === 'token') {
+            console.log('DEBUG: Storage event triggered for key:', e.key);
             // Another tab changed the auth state
             const newToken = localStorage.getItem('token');
             const newUser = safeParse('user', null);
@@ -85,7 +88,7 @@ if (typeof window !== 'undefined') {
             // Optionally reload the page to prevent confusion
             if (e.oldValue !== e.newValue) {
                 console.warn('Auth state changed in another tab. Reloading...');
-                window.location.reload();
+                // window.location.reload(); // Temporarily disabled to avoid lost logs during debug
             }
         }
     });
