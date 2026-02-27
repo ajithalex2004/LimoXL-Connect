@@ -19,6 +19,7 @@ interface User {
     email: string;
     name: string;
     role: string;
+    company_id?: string;
     password_change_required?: boolean;
 }
 

@@ -10,6 +10,8 @@ import Login from './pages/Login';
 import OutsourceMaster from './pages/operator/OutsourceMaster';
 import SubmittedQuotes from './pages/operator/SubmittedQuotes';
 import TeamManagement from './pages/operator/TeamManagement';
+import Dispatch from './pages/operator/Dispatch';
+import SecureDriverLink from './pages/SecureDriverLink';
 
 function App() {
     return (
