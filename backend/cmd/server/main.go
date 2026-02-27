@@ -89,7 +89,8 @@ func main() {
 	// Add a Custom Request Debugger
 	r.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			log.Printf("DEBUG: Incoming Request: %s %s (RemoteAddr: %s)", r.Method, r.URL.Path, r.RemoteAddr)
+			w.Header().Set("X-Backend-Version", "2.1.0")
+			log.Printf("DEBUG [%s]: Incoming %s %s", r.RemoteAddr, r.Method, r.URL.Path)
 			next.ServeHTTP(w, r)
 		})
 	})
