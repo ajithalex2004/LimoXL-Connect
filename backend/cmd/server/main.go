@@ -63,6 +63,9 @@ func main() {
 		log.Printf("Warning: Failed to run migrations: %v\n", err)
 	}
 
+	// Seed default admin user
+	db.SeedAdmin()
+
 	// Initialize Repositories
 	companyRepo := repository.NewPostgresCompanyRepo(db.DB)
 	userRepo := repository.NewPostgresUserRepo(db.DB)
