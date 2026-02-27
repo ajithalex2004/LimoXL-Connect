@@ -86,9 +86,17 @@ func main() {
 	r.Use(middlewareChi.Logger)
 	r.Use(middlewareChi.Recoverer)
 
+	// Add a Custom Request Debugger
+	r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			log.Printf("DEBUG: Incoming Request: %s %s (RemoteAddr: %s)", r.Method, r.URL.Path, r.RemoteAddr)
+			next.ServeHTTP(w, r)
+		})
+	})
+
 	// CORS Config
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176", "http://localhost:5177", "http://localhost:5178", "https://limoxl-connect-production.up.railway.app"},
+		AllowedOrigins:   []string{"*"}, // Temporarily widen for debug
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
@@ -202,13 +210,17 @@ func main() {
 	fileServer := http.FileServer(filesDir)
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("DEBUG: Route NOT FOUND: %s %s (Falling back to dist/index.html or static file)", r.Method, r.URL.Path)
+
 		// 1. If it's an API route that didn't match, return JSON error
 		if strings.HasPrefix(r.URL.Path, "/api") {
+			log.Printf("DEBUG: Route is an /api path, returning 404 JSON error")
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusNotFound)
 			json.NewEncoder(w).Encode(map[string]string{
-				"error": "API route not found",
-				"path":  r.URL.Path,
+				"error":  "API route not found",
+				"path":   r.URL.Path,
+				"method": r.Method,
 			})
 			return
 		}
@@ -222,6 +234,7 @@ func main() {
 		}
 
 		// 3. Otherwise serve index.html for React SPA
+		log.Printf("DEBUG: Serving fallback index.html for %s", r.URL.Path)
 		http.ServeFile(w, r, filepath.Join(distPath, "index.html"))
 	})
 

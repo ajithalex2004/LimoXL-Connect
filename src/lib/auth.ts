@@ -3,6 +3,7 @@ import axios from 'axios';
 
 const isProd = import.meta.env.PROD;
 const apiPrefix = import.meta.env.VITE_API_URL || (isProd ? '/api' : 'http://localhost:8080/api');
+console.log('DEBUG: apiPrefix initialized as:', apiPrefix);
 
 // Axios Instance
 export const api = axios.create({
