@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"limoxlink-backend/internal/middleware"
 	"limoxlink-backend/internal/models"
 	"limoxlink-backend/internal/repository"
 	"net/http"
@@ -223,9 +224,21 @@ func (h *OperatorHandler) HandleRejectQuote(w http.ResponseWriter, r *http.Reque
 }
 
 func (h *OperatorHandler) HandleListAllTrips(w http.ResponseWriter, r *http.Request) {
-	// Demo ID
-	operatorIDStr := "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a00"
-	operatorID := uuid.MustParse(operatorIDStr)
+	// Get company ID from authenticated user's JWT claims
+	claims, ok := r.Context().Value(middleware.ClaimsKey).(*middleware.Claims)
+	if !ok || claims == nil {
+		// Fallback: return empty list if no claims (shouldn't happen with auth middleware)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode([]interface{}{})
+		return
+	}
+
+	operatorID, err := uuid.Parse(claims.CompanyID)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode([]interface{}{})
+		return
+	}
 
 	trips, err := h.TripRepo.ListOperatorTrips(r.Context(), operatorID)
 	if err != nil {
@@ -233,9 +246,13 @@ func (h *OperatorHandler) HandleListAllTrips(w http.ResponseWriter, r *http.Requ
 		http.Error(w, "Error listing trips", http.StatusInternalServerError)
 		return
 	}
+	if trips == nil {
+		trips = []models.Trip{}
+	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(trips)
 }
+
 
 func (h *OperatorHandler) HandleAssignOutsource(w http.ResponseWriter, r *http.Request) {
 	tripIDStr := chi.URLParam(r, "id")
