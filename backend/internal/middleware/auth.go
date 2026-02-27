@@ -11,6 +11,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+const ClaimsKey = "user"
+
 var SecretKey = []byte(getSecret())
 
 func getSecret() string {
@@ -75,7 +77,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		}
 
 		// Add claims to context directly
-		ctx := context.WithValue(r.Context(), "user", claims)
+		ctx := context.WithValue(r.Context(), ClaimsKey, claims)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
