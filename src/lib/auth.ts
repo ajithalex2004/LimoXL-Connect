@@ -64,8 +64,6 @@ export const useAuthStore = create<AuthState>((set) => {
             set({ token, user, isAuthenticated: true });
         },
 
-    },
-
         logout: () => {
             console.log('DEBUG: Store logout called');
             localStorage.removeItem('token');
