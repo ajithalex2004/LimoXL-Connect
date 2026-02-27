@@ -3,7 +3,7 @@ import axios from 'axios';
 
 // Axios Instance
 export const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || '/api',
+    baseURL: '', // Handled by interceptor below
     headers: {
         'Content-Type': 'application/json',
     },
@@ -71,8 +71,17 @@ export const useAuthStore = create<AuthState>((set) => {
     };
 });
 
-// Add interceptor to attach token to requests
+// Add interceptor to attach token and normalize URL
 api.interceptors.request.use((config) => {
+    // 1. Normalize URL: ensure relative paths hit /api
+    if (config.url && !config.url.startsWith('http')) {
+        const path = config.url.startsWith('/') ? config.url : `/${config.url}`;
+        if (!path.startsWith('/api/')) {
+            config.url = `/api${path}`;
+        }
+    }
+
+    // 2. Attach Token
     const token = useAuthStore.getState().token;
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;

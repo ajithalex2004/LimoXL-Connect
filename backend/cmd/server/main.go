@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"limoxlink-backend/db"
 	"limoxlink-backend/internal/api"
@@ -121,11 +122,11 @@ func main() {
 			r.Post("/trips/{id}/dispatch", operatorHandler.HandleDispatchTrip)
 		}) // New
 
-		// Operator Fleet (Reusing FleetHandler)
+		// Operator Fleet (using FleetHandler directly under /api/operator)
 		r.Get("/operator/vehicles", fleetHandler.ListVehicles)
-		r.Post("/operator/vehicles", fleetHandler.CreateVehicle) // New
+		r.Post("/operator/vehicles", fleetHandler.CreateVehicle)
 		r.Get("/operator/drivers", fleetHandler.ListDrivers)
-		r.Post("/operator/drivers", fleetHandler.CreateDriver) // New
+		r.Post("/operator/drivers", fleetHandler.CreateDriver)
 
 		// Companies
 		r.Post("/companies", companyHandler.CreateCompany)
@@ -201,7 +202,18 @@ func main() {
 	fileServer := http.FileServer(filesDir)
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
-		// 1. Check if it's a physical file in dist
+		// 1. If it's an API route that didn't match, return JSON error
+		if strings.HasPrefix(r.URL.Path, "/api") {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(map[string]string{
+				"error": "API route not found",
+				"path":  r.URL.Path,
+			})
+			return
+		}
+
+		// 2. Check if it's a physical file in dist
 		path := filepath.Join(distPath, r.URL.Path)
 		info, err := os.Stat(path)
 		if err == nil && !info.IsDir() {
@@ -209,7 +221,7 @@ func main() {
 			return
 		}
 
-		// 2. Otherwise serve index.html for React SPA
+		// 3. Otherwise serve index.html for React SPA
 		http.ServeFile(w, r, filepath.Join(distPath, "index.html"))
 	})
 
