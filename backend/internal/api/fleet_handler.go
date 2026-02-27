@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"limoxlink-backend/internal/middleware"
 	"limoxlink-backend/internal/models"
 	"limoxlink-backend/internal/repository"
 	"net/http"
@@ -10,8 +11,6 @@ import (
 
 	"github.com/google/uuid"
 )
-
-// ... (existing code)
 
 type FleetHandler struct {
 	VehicleRepo repository.VehicleRepository
@@ -25,29 +24,45 @@ func NewFleetHandler(vRepo repository.VehicleRepository, dRepo repository.Driver
 	}
 }
 
-func (h *FleetHandler) getCompanyID(r *http.Request) uuid.UUID {
-	// Simple path-based logic for demo.
-	// In real app, this comes from Middleware/JWT context.
-	if r.URL.Path == "/api/operator/vehicles" || r.URL.Path == "/api/operator/drivers" {
-		return uuid.MustParse("a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a00") // Operator ID
+// getCompanyIDFromClaims extracts the company UUID from the authenticated JWT claims.
+func getCompanyIDFromClaims(r *http.Request) (uuid.UUID, bool) {
+	claims, ok := r.Context().Value(middleware.ClaimsKey).(*middleware.Claims)
+	if !ok || claims == nil || claims.CompanyID == "" {
+		return uuid.Nil, false
 	}
-	return uuid.MustParse("a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11") // Default to Partner ID
+	id, err := uuid.Parse(claims.CompanyID)
+	if err != nil {
+		return uuid.Nil, false
+	}
+	return id, true
 }
 
 func (h *FleetHandler) ListVehicles(w http.ResponseWriter, r *http.Request) {
-	companyID := h.getCompanyID(r)
+	companyID, ok := getCompanyIDFromClaims(r)
+	if !ok {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode([]interface{}{})
+		return
+	}
 
 	vehicles, err := h.VehicleRepo.ListByCompany(r.Context(), companyID)
 	if err != nil {
 		http.Error(w, "Error listing vehicles", http.StatusInternalServerError)
 		return
 	}
+	if vehicles == nil {
+		vehicles = []models.Vehicle{}
+	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(vehicles)
 }
 
 func (h *FleetHandler) CreateVehicle(w http.ResponseWriter, r *http.Request) {
-	companyID := h.getCompanyID(r)
+	companyID, ok := getCompanyIDFromClaims(r)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 
 	var req models.Vehicle
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -67,17 +82,17 @@ func (h *FleetHandler) CreateVehicle(w http.ResponseWriter, r *http.Request) {
 		case "Bus":
 			req.Type = "BUS"
 		default:
-			req.Type = "SEDAN" // Default fallback
+			req.Type = "SEDAN"
 		}
 	}
 
-	fmt.Printf("DEBUG: Creating Vehicle: %+v\n", req) // Debug Log
+	fmt.Printf("DEBUG: Creating Vehicle: %+v\n", req)
 
 	req.CompanyID = companyID
-	req.Status = models.VehicleStatusOffline // Default status
+	req.Status = models.VehicleStatusOffline
 
 	if err := h.VehicleRepo.Create(r.Context(), &req); err != nil {
-		fmt.Printf("DEBUG: DB Error: %v\n", err) // Debug Log
+		fmt.Printf("DEBUG: DB Error: %v\n", err)
 		if strings.Contains(err.Error(), "duplicate key") {
 			http.Error(w, "Vehicle with this license plate already exists", http.StatusConflict)
 			return
@@ -92,19 +107,31 @@ func (h *FleetHandler) CreateVehicle(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *FleetHandler) ListDrivers(w http.ResponseWriter, r *http.Request) {
-	companyID := h.getCompanyID(r)
+	companyID, ok := getCompanyIDFromClaims(r)
+	if !ok {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode([]interface{}{})
+		return
+	}
 
 	drivers, err := h.DriverRepo.ListByCompany(r.Context(), companyID)
 	if err != nil {
 		http.Error(w, "Error listing drivers", http.StatusInternalServerError)
 		return
 	}
+	if drivers == nil {
+		drivers = []models.Driver{}
+	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(drivers)
 }
 
 func (h *FleetHandler) CreateDriver(w http.ResponseWriter, r *http.Request) {
-	companyID := h.getCompanyID(r)
+	companyID, ok := getCompanyIDFromClaims(r)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 
 	var req models.Driver
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

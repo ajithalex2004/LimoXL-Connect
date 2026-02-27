@@ -116,7 +116,7 @@ func (r *OutsourceCompanyRepo) List(ctx context.Context) ([]*OutsourceCompany, e
 	query := `
 		SELECT id, name, contact_person, designation, email, contact_number,
 		       address, city, country, trade_license_no, itc_permit_no, vat_no,
-		       sla_score, rating, status, is_active, notes,
+		       rating, is_active, notes,
 		       created_at, updated_at, deleted_at
 		FROM outsource_companies
 		WHERE deleted_at IS NULL
@@ -129,7 +129,7 @@ func (r *OutsourceCompanyRepo) List(ctx context.Context) ([]*OutsourceCompany, e
 	}
 	defer rows.Close()
 
-	var companies []*OutsourceCompany
+	companies := []*OutsourceCompany{}
 	for rows.Next() {
 		company := &OutsourceCompany{}
 		err := rows.Scan(
@@ -145,9 +145,7 @@ func (r *OutsourceCompanyRepo) List(ctx context.Context) ([]*OutsourceCompany, e
 			&company.TradeLicense,
 			&company.ITCPermit,
 			&company.VATNo,
-			&company.SLAScore,
 			&company.Rating,
-			&company.Status,
 			&company.IsActive,
 			&company.Notes,
 			&company.CreatedAt,
