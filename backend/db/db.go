@@ -49,7 +49,25 @@ func RunMigrations() error {
 	if err != nil {
 		return fmt.Errorf("error executing schema: %w", err)
 	}
-	log.Println("Database schema applied successfully")
+	log.Println("Migration 01: schema applied successfully")
+
+	// Run additional migrations
+	migrations := []string{
+		"db/migrations/02_outsource_companies.sql",
+	}
+	for _, path := range migrations {
+		data, err := os.ReadFile(path)
+		if err != nil {
+			log.Printf("Warning: Could not read migration %s: %v", path, err)
+			continue
+		}
+		if _, err := DB.Exec(string(data)); err != nil {
+			log.Printf("Warning: Migration %s failed: %v", path, err)
+		} else {
+			log.Printf("Migration applied: %s", path)
+		}
+	}
+
 	return nil
 }
 
