@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { superAdminService, TenantWithFeatures, Tenant } from '../../services/superadmin';
 import { 
     Globe, 
@@ -29,6 +30,7 @@ const FEATURE_LABELS: Record<string, string> = {
 };
 
 const TenantDashboard = () => {
+    const navigate = useNavigate();
     const [tenants, setTenants] = useState<TenantWithFeatures[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -228,12 +230,15 @@ const TenantDashboard = () => {
                             {filteredTenants.map((tenant) => (
                                 <tr key={tenant.id} className="hover:bg-indigo-50/30 transition-colors group">
                                     <td className="px-6 py-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold border border-indigo-100 shadow-sm">
+                                        <div 
+                                            className="flex items-center gap-3 cursor-pointer group/name"
+                                            onClick={() => navigate(`/superadmin/tenants/${tenant.id}`)}
+                                        >
+                                            <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold border border-indigo-100 shadow-sm group-hover/name:bg-indigo-600 group-hover/name:text-white transition-all">
                                                 {tenant.name.charAt(0)}
                                             </div>
                                             <div>
-                                                <p className="font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">{tenant.name}</p>
+                                                <p className="font-semibold text-gray-900 group-hover/name:text-indigo-600 transition-colors uppercase">{tenant.name}</p>
                                                 <p className="text-xs text-gray-400 font-mono tracking-tighter">{tenant.slug}</p>
                                             </div>
                                         </div>
@@ -326,9 +331,10 @@ const TenantDashboard = () => {
                                             </button>
                                             <button 
                                                 onClick={() => handleSwitchTenant(tenant.id)}
-                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg font-bold text-xs hover:bg-indigo-600 hover:text-white transition-all group/btn"
+                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-lg font-bold text-xs hover:bg-emerald-600 hover:text-white transition-all group/btn"
+                                                title="Switch context to this tenant"
                                             >
-                                                Enter
+                                                Switch
                                                 <ArrowUpRight size={14} className="group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
                                             </button>
                                         </div>

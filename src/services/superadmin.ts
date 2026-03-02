@@ -59,8 +59,9 @@ export const superAdminService = {
         const response = await api.post(`superadmin/impersonate/${tenantId}`);
         const { token } = response.data;
         if (token) {
-            localStorage.setItem('limoxl_auth_token', token);
-            window.location.href = '/'; // Refresh to load new context
+            localStorage.setItem('token', token);
+            // We need to trigger a hard reload to ensure all stores and headers reset
+            window.location.href = '/'; 
         }
         return response.data;
     },
