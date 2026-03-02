@@ -19,8 +19,8 @@ func NewPostgresUserRepo(db *sql.DB) *PostgresUserRepo {
 
 func (r *PostgresUserRepo) Create(ctx context.Context, user *models.User) error {
 	query := `
-		INSERT INTO users (id, company_id, role, email, password_hash, name, password_change_required, created_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		INSERT INTO users (id, company_id, role, email, password_hash, name, is_super_admin, password_change_required, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 	`
 	user.ID = uuid.New()
 	user.CreatedAt = time.Now()
@@ -32,6 +32,7 @@ func (r *PostgresUserRepo) Create(ctx context.Context, user *models.User) error 
 		user.Email,
 		user.PasswordHash,
 		user.Name,
+		user.IsSuperAdmin,
 		user.PasswordChangeRequired,
 		user.CreatedAt,
 	)
@@ -39,12 +40,12 @@ func (r *PostgresUserRepo) Create(ctx context.Context, user *models.User) error 
 }
 
 func (r *PostgresUserRepo) GetByEmail(ctx context.Context, email string) (*models.User, error) {
-	query := `SELECT id, company_id, role, email, password_hash, name, password_change_required, created_at FROM users WHERE email = $1`
+	query := `SELECT id, company_id, role, email, password_hash, name, is_super_admin, password_change_required, created_at FROM users WHERE email = $1`
 
 	row := r.DB.QueryRowContext(ctx, query, email)
 	var u models.User
 	err := row.Scan(
-		&u.ID, &u.CompanyID, &u.Role, &u.Email, &u.PasswordHash, &u.Name, &u.PasswordChangeRequired, &u.CreatedAt,
+		&u.ID, &u.CompanyID, &u.Role, &u.Email, &u.PasswordHash, &u.Name, &u.IsSuperAdmin, &u.PasswordChangeRequired, &u.CreatedAt,
 	)
 	if err != nil {
 		return nil, err
@@ -53,12 +54,12 @@ func (r *PostgresUserRepo) GetByEmail(ctx context.Context, email string) (*model
 }
 
 func (r *PostgresUserRepo) GetByID(ctx context.Context, id uuid.UUID) (*models.User, error) {
-	query := `SELECT id, company_id, role, email, password_hash, name, password_change_required, created_at FROM users WHERE id = $1`
+	query := `SELECT id, company_id, role, email, password_hash, name, is_super_admin, password_change_required, created_at FROM users WHERE id = $1`
 
 	row := r.DB.QueryRowContext(ctx, query, id)
 	var u models.User
 	err := row.Scan(
-		&u.ID, &u.CompanyID, &u.Role, &u.Email, &u.PasswordHash, &u.Name, &u.PasswordChangeRequired, &u.CreatedAt,
+		&u.ID, &u.CompanyID, &u.Role, &u.Email, &u.PasswordHash, &u.Name, &u.IsSuperAdmin, &u.PasswordChangeRequired, &u.CreatedAt,
 	)
 	if err != nil {
 		return nil, err
@@ -73,7 +74,7 @@ func (r *PostgresUserRepo) UpdatePassword(ctx context.Context, id uuid.UUID, has
 }
 
 func (r *PostgresUserRepo) ListByCompany(ctx context.Context, companyID uuid.UUID) ([]*models.User, error) {
-	query := `SELECT id, company_id, role, email, password_hash, name, password_change_required, created_at FROM users WHERE company_id = $1 ORDER BY created_at DESC`
+	query := `SELECT id, company_id, role, email, password_hash, name, is_super_admin, password_change_required, created_at FROM users WHERE company_id = $1 ORDER BY created_at DESC`
 
 	rows, err := r.DB.QueryContext(ctx, query, companyID)
 	if err != nil {
@@ -85,7 +86,7 @@ func (r *PostgresUserRepo) ListByCompany(ctx context.Context, companyID uuid.UUI
 	for rows.Next() {
 		var u models.User
 		err := rows.Scan(
-			&u.ID, &u.CompanyID, &u.Role, &u.Email, &u.PasswordHash, &u.Name, &u.PasswordChangeRequired, &u.CreatedAt,
+			&u.ID, &u.CompanyID, &u.Role, &u.Email, &u.PasswordHash, &u.Name, &u.IsSuperAdmin, &u.PasswordChangeRequired, &u.CreatedAt,
 		)
 		if err != nil {
 			return nil, err
