@@ -59,14 +59,15 @@ func RunMigrations() error {
 	for _, path := range migrations {
 		data, err := os.ReadFile(path)
 		if err != nil {
-			log.Printf("Warning: Could not read migration %s: %v", path, err)
-			continue
+			log.Printf("CRITICAL: Could not read migration %s: %v", path, err)
+			return fmt.Errorf("could not read migration %s: %w", path, err)
 		}
+		log.Printf("Applying migration: %s", path)
 		if _, err := DB.Exec(string(data)); err != nil {
-			log.Printf("Warning: Migration %s failed: %v", path, err)
-		} else {
-			log.Printf("Migration applied: %s", path)
+			log.Printf("CRITICAL: Migration %s failed: %v", path, err)
+			return fmt.Errorf("migration %s failed: %w", path, err)
 		}
+		log.Printf("Migration applied successfully: %s", path)
 	}
 
 	return nil
