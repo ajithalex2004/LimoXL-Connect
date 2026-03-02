@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"limoxlink-backend/internal/models"
 
 	"github.com/google/uuid"
