@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { superAdminService, TenantWithFeatures } from '../../services/superadmin';
+import { superAdminService, TenantWithFeatures, Tenant } from '../../services/superadmin';
 import { 
     Globe, 
     ShieldCheck, 
@@ -32,7 +32,7 @@ const TenantDashboard = () => {
     const [selectedTenant, setSelectedTenant] = useState<TenantWithFeatures | null>(null);
     const [isFeatureModalOpen, setFeatureModalOpen] = useState(false);
     const [isCreateModalOpen, setCreateModalOpen] = useState(false);
-    const [newTenant, setNewTenant] = useState({ name: '', slug: '', plan: 'STARTER' });
+    const [newTenant, setNewTenant] = useState<Partial<Tenant>>({ name: '', slug: '', plan: 'STARTER' });
 
     useEffect(() => {
         fetchTenants();
