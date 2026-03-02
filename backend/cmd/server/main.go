@@ -6,6 +6,7 @@ import (
 	"limoxlink-backend/db"
 	"limoxlink-backend/internal/api"
 	"limoxlink-backend/internal/middleware"
+	"limoxlink-backend/internal/models"
 	"limoxlink-backend/internal/repository"
 	"log"
 	"net/http"
@@ -82,7 +83,8 @@ func main() {
 	tripHandler := api.NewTripHandler(tripRepo)
 	authHandler := api.NewAuthHandler(userRepo, tenantRepo)
 	operatorHandler := api.NewOperatorHandler(companyRepo, userRepo, tripRepo, outsourceCompanyRepo)
-	fleetHandler := api.NewFleetHandler(vehicleRepo, driverRepo) // New
+	fleetHandler := api.NewFleetHandler(vehicleRepo, driverRepo)
+	superAdminHandler := api.NewSuperAdminHandler(tenantRepo, userRepo)
 
 	r := chi.NewRouter()
 
