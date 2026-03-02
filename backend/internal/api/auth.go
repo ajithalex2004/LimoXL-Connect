@@ -43,13 +43,13 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	// 1. Fetch User
 	user, err := h.UserRepo.GetByEmail(r.Context(), req.Email)
 	if err != nil {
-		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		http.Error(w, "Invalid credentials: user lookup failed: "+err.Error(), http.StatusUnauthorized)
 		return
 	}
 
 	// 2. Compare Password
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
-		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		http.Error(w, "Invalid credentials: password mismatch", http.StatusUnauthorized)
 		return
 	}
 
