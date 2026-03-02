@@ -139,8 +139,9 @@ func main() {
 		r.Post("/auth/login", authHandler.HandleLogin)
 		r.Post("/auth/change-password", authHandler.HandleChangePassword)
 
-		// Operator Routes
+		// Operator Routes — all protected by AuthMiddleware
 		r.Route("/operator", func(r chi.Router) {
+			r.Use(middleware.AuthMiddleware)
 			r.Get("/outsource-companies", operatorHandler.HandleListOutsourceCompanies)
 			r.Post("/outsource-companies", operatorHandler.HandleCreateOutsourceCompany)
 			r.Put("/outsource-companies/{id}", operatorHandler.HandleUpdateOutsourceCompany)
@@ -152,13 +153,15 @@ func main() {
 			r.Post("/trips", operatorHandler.HandleCreateTrip)
 			r.Post("/trips/{id}/assign", operatorHandler.HandleAssignOutsource)
 			r.Post("/trips/{id}/dispatch", operatorHandler.HandleDispatchTrip)
-		}) // New
-
-		// Operator Fleet (using FleetHandler directly under /api/operator)
-		r.Get("/operator/vehicles", fleetHandler.ListVehicles)
-		r.Post("/operator/vehicles", fleetHandler.CreateVehicle)
-		r.Get("/operator/drivers", fleetHandler.ListDrivers)
-		r.Post("/operator/drivers", fleetHandler.CreateDriver)
+			// Fleet
+			r.Get("/vehicles", fleetHandler.ListVehicles)
+			r.Post("/vehicles", fleetHandler.CreateVehicle)
+			r.Get("/drivers", fleetHandler.ListDrivers)
+			r.Post("/drivers", fleetHandler.CreateDriver)
+			// Team Management
+			r.Get("/users", userHandler.HandleListUsers)
+			r.Post("/users", userHandler.CreateUser)
+		})
 
 		// Companies
 		r.Post("/companies", companyHandler.CreateCompany)

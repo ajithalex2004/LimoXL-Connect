@@ -231,12 +231,12 @@ export const operatorService = {
     },
 
     listUsers: async () => {
-        const response = await api.get('users');
+        const response = await api.get('operator/users');
         return response.data;
     },
 
     createTeamMember: async (data: any) => {
-        const response = await api.post('users', data);
+        const response = await api.post('operator/users', data);
         return response.data;
     }
 };
