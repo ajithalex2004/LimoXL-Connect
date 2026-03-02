@@ -1,11 +1,13 @@
 import { FileText, CheckCircle, Clock, AlertCircle, X, Building, Users, Zap, Activity } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { superAdminService } from '../services/superadmin';
 
 import { partnerService, operatorService, type Trip } from '../services/api';
 import { useAuthStore } from '../lib/auth';
 
 const Dashboard = () => {
+    const navigate = useNavigate();
     const { user } = useAuthStore();
     const [activities, setActivities] = useState<Trip[]>([]);
     const [operatorTrips, setOperatorTrips] = useState<Trip[]>([]);
@@ -156,17 +158,17 @@ const Dashboard = () => {
 
     // Operator Stats
     const operatorStats = [
-        { label: 'Outsource Companies', value: '1', icon: Building, color: 'text-purple-600', bg: 'bg-purple-100' },
-        { label: 'Active Drivers', value: operatorTrips.filter(t => ['DRIVER_ASSIGNED', 'EN_ROUTE', 'IN_TRIP'].includes(t.status)).length.toString(), icon: Users, color: 'text-blue-600', bg: 'bg-blue-100' },
-        { label: 'Pending RFQs', value: operatorTrips.filter(t => t.status === 'MARKETPLACE_SEARCH' || t.status === 'CREATED').length.toString(), icon: Clock, color: 'text-amber-600', bg: 'bg-amber-100' },
+        { label: 'Outsource Companies', value: '1', icon: Building, color: 'text-purple-600', bg: 'bg-purple-100', path: '/outsource-master' },
+        { label: 'Active Drivers', value: operatorTrips.filter(t => ['DRIVER_ASSIGNED', 'EN_ROUTE', 'IN_TRIP'].includes(t.status)).length.toString(), icon: Users, color: 'text-blue-600', bg: 'bg-blue-100', path: '/dispatch' },
+        { label: 'Pending RFQs', value: operatorTrips.filter(t => t.status === 'MARKETPLACE_SEARCH' || t.status === 'CREATED').length.toString(), icon: Clock, color: 'text-amber-600', bg: 'bg-amber-100', path: '/dispatch' },
     ];
 
     // Partner Stats
     const partnerStats = [
-        { label: 'New RFQs', value: activities.filter(a => a.status === 'MARKETPLACE_SEARCH').length.toString(), icon: FileText, color: 'text-blue-600', bg: 'bg-blue-100' },
-        { label: 'Pending Quotes', value: '1', icon: Clock, color: 'text-amber-600', bg: 'bg-amber-100' },
-        { label: 'Assigned Trips', value: activities.filter(a => a.status !== 'MARKETPLACE_SEARCH').length.toString(), icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-100' },
-        { label: 'SLA Alerts', value: '0', icon: AlertCircle, color: 'text-red-600', bg: 'bg-red-100' },
+        { label: 'New RFQs', value: activities.filter(a => a.status === 'MARKETPLACE_SEARCH').length.toString(), icon: FileText, color: 'text-blue-600', bg: 'bg-blue-100', path: '/partner/rfqs' },
+        { label: 'Pending Quotes', value: '1', icon: Clock, color: 'text-amber-600', bg: 'bg-amber-100', path: '/partner/rfqs' },
+        { label: 'Assigned Trips', value: activities.filter(a => a.status !== 'MARKETPLACE_SEARCH').length.toString(), icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-100', path: '/partner/trips' },
+        { label: 'SLA Alerts', value: '0', icon: AlertCircle, color: 'text-red-600', bg: 'bg-red-100', path: '/partner/trips' },
     ];
 
     const stats = isOperator ? operatorStats : partnerStats;
@@ -213,7 +215,11 @@ const Dashboard = () => {
             {!isSuperAdmin && (
                 <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-${isOperator ? '3' : '4'} gap-4`}>
                     {stats.map((stat) => (
-                        <div key={stat.label} className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center gap-4">
+                        <div 
+                            key={stat.label} 
+                            onClick={() => stat.path && navigate(stat.path)}
+                            className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center gap-4 cursor-pointer hover:shadow-md hover:border-emerald-100 transition-all active:scale-[0.98]"
+                        >
                             <div className={`p-3 rounded-full ${stat.bg}`}>
                                 <stat.icon className={`h-6 w-6 ${stat.color}`} />
                             </div>
