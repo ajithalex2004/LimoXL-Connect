@@ -13,15 +13,20 @@ const Dashboard = () => {
     const [quotePrice, setQuotePrice] = useState('');
     const [quoteNotes, setQuoteNotes] = useState('');
 
+    const isSuperAdmin = user?.role === 'SUPER_ADMIN';
     const isOperator = user?.role === 'ADMIN' || user?.role === 'OPS' || user?.role === 'DISPATCHER';
 
     useEffect(() => {
+        if (isSuperAdmin) {
+            setLoading(false);
+            return;
+        }
         if (!isOperator) {
             loadActivities();
         } else {
             loadOperatorData();
         }
-    }, [isOperator]);
+    }, [isOperator, isSuperAdmin]);
 
     const loadActivities = async () => {
         try {
@@ -155,7 +160,7 @@ const Dashboard = () => {
         <div className="space-y-6">
             <div>
                 <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-                <p className="text-gray-500">Welcome to Limo XL Connect {isOperator ? '(Operator Portal)' : '(Partner Portal)'}</p>
+                <p className="text-gray-500">Welcome to Limo XL Connect {isSuperAdmin ? '(System Orchestrator)' : isOperator ? '(Operator Portal)' : '(Partner Portal)'}</p>
                 <div className="text-[10px] text-gray-300 space-y-1">
                     <p>Debug [Store]: User is {JSON.stringify(user)}</p>
                     <p>Debug [Storage]: Raw User is "{localStorage.getItem('user')}"</p>
@@ -163,21 +168,23 @@ const Dashboard = () => {
                 </div>
             </div>
 
-            <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-${isOperator ? '3' : '4'} gap-4`}>
-                {stats.map((stat) => (
-                    <div key={stat.label} className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center gap-4">
-                        <div className={`p-3 rounded-full ${stat.bg}`}>
-                            <stat.icon className={`h-6 w-6 ${stat.color}`} />
+            {!isSuperAdmin && (
+                <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-${isOperator ? '3' : '4'} gap-4`}>
+                    {stats.map((stat) => (
+                        <div key={stat.label} className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center gap-4">
+                            <div className={`p-3 rounded-full ${stat.bg}`}>
+                                <stat.icon className={`h-6 w-6 ${stat.color}`} />
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-500 font-medium">{stat.label}</p>
+                                <h3 className="text-2xl font-bold text-gray-900">{stat.value}</h3>
+                            </div>
                         </div>
-                        <div>
-                            <p className="text-sm text-gray-500 font-medium">{stat.label}</p>
-                            <h3 className="text-2xl font-bold text-gray-900">{stat.value}</h3>
-                        </div>
-                    </div>
-                ))}
-            </div>
+                    ))}
+                </div>
+            )}
 
-            {!isOperator && (
+            {!isOperator && !isSuperAdmin && (
                 <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
                     <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent RFQ Requests</h2>
                     <div className="space-y-4">
@@ -252,7 +259,7 @@ const Dashboard = () => {
                     </div>
                 </div>
             )}
-            {isOperator && (
+            {isOperator && !isSuperAdmin && (
                 <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
                     <h2 className="text-lg font-semibold text-gray-900 mb-4">Active Trip Status</h2>
                     <div className="overflow-x-auto">

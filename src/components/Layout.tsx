@@ -43,7 +43,7 @@ const Layout = () => {
         // Super Admin
         if (role === 'SUPER_ADMIN') {
             return [
-                { name: 'System Dashboard', path: '/superadmin/dashboard', icon: Shield },
+                { name: 'System Dashboard', path: '/', icon: Shield },
                 { name: 'Infrastructure', path: '/superadmin/dashboard', icon: Server },
             ];
         }
