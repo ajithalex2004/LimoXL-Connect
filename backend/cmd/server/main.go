@@ -72,14 +72,15 @@ func main() {
 	vehicleRepo := repository.NewPostgresVehicleRepo(db.DB)
 	driverRepo := repository.NewPostgresDriverRepo(db.DB) // New
 	tripRepo := repository.NewPostgresTripRepo(db.DB)
-	outsourceCompanyRepo := repository.NewOutsourceCompanyRepo(db.DB) // New
+	outsourceCompanyRepo := repository.NewOutsourceCompanyRepo(db.DB)
+	tenantRepo := repository.NewTenantRepository(db.DB)
 
 	// Initialize Handlers
 	companyHandler := api.NewCompanyHandler(companyRepo)
 	userHandler := api.NewUserHandler(userRepo)
 	vehicleHandler := api.NewVehicleHandler(vehicleRepo)
 	tripHandler := api.NewTripHandler(tripRepo)
-	authHandler := api.NewAuthHandler(userRepo)
+	authHandler := api.NewAuthHandler(userRepo, tenantRepo)
 	operatorHandler := api.NewOperatorHandler(companyRepo, userRepo, tripRepo, outsourceCompanyRepo)
 	fleetHandler := api.NewFleetHandler(vehicleRepo, driverRepo) // New
 
@@ -139,28 +140,56 @@ func main() {
 		r.Post("/auth/login", authHandler.HandleLogin)
 		r.Post("/auth/change-password", authHandler.HandleChangePassword)
 
+		// SuperAdmin Routes
+		r.Route("/superadmin", func(r chi.Router) {
+			r.Use(middleware.AuthMiddleware)
+			r.Use(middleware.SuperAdminMiddleware)
+			r.Get("/tenants", superAdminHandler.HandleListTenants)
+			r.Post("/tenants", superAdminHandler.HandleCreateTenant)
+			r.Put("/tenants/{id}", superAdminHandler.HandleUpdateTenant)
+			r.Post("/tenants/{id}/features", superAdminHandler.HandleToggleFeature)
+		})
+
 		// Operator Routes — all protected by AuthMiddleware
 		r.Route("/operator", func(r chi.Router) {
 			r.Use(middleware.AuthMiddleware)
-			r.Get("/outsource-companies", operatorHandler.HandleListOutsourceCompanies)
-			r.Post("/outsource-companies", operatorHandler.HandleCreateOutsourceCompany)
-			r.Put("/outsource-companies/{id}", operatorHandler.HandleUpdateOutsourceCompany)
-			r.Delete("/outsource-companies/{id}", operatorHandler.HandleDeleteOutsourceCompany)
-			r.Get("/quotes", operatorHandler.HandleListQuotes)
-			r.Post("/quotes/{id}/accept", operatorHandler.HandleAcceptQuote)
-			r.Post("/quotes/{id}/reject", operatorHandler.HandleRejectQuote)
-			r.Get("/trips", operatorHandler.HandleListAllTrips)
-			r.Post("/trips", operatorHandler.HandleCreateTrip)
-			r.Post("/trips/{id}/assign", operatorHandler.HandleAssignOutsource)
-			r.Post("/trips/{id}/dispatch", operatorHandler.HandleDispatchTrip)
-			// Fleet
-			r.Get("/vehicles", fleetHandler.ListVehicles)
-			r.Post("/vehicles", fleetHandler.CreateVehicle)
-			r.Get("/drivers", fleetHandler.ListDrivers)
-			r.Post("/drivers", fleetHandler.CreateDriver)
-			// Team Management
-			r.Get("/users", userHandler.HandleListUsers)
-			r.Post("/users", userHandler.CreateUser)
+
+			// Marketplace Features
+			r.Group(func(r chi.Router) {
+				r.Use(middleware.FeatureGate(tenantRepo, models.FeatureOutsourceMarketplace))
+				r.Get("/outsource-companies", operatorHandler.HandleListOutsourceCompanies)
+				r.Post("/outsource-companies", operatorHandler.HandleCreateOutsourceCompany)
+				r.Put("/outsource-companies/{id}", operatorHandler.HandleUpdateOutsourceCompany)
+				r.Delete("/outsource-companies/{id}", operatorHandler.HandleDeleteOutsourceCompany)
+				r.Get("/quotes", operatorHandler.HandleListQuotes)
+				r.Post("/quotes/{id}/accept", operatorHandler.HandleAcceptQuote)
+				r.Post("/quotes/{id}/reject", operatorHandler.HandleRejectQuote)
+			})
+
+			// Dispatch Features
+			r.Group(func(r chi.Router) {
+				r.Use(middleware.FeatureGate(tenantRepo, models.FeatureDispatch))
+				r.Get("/trips", operatorHandler.HandleListAllTrips)
+				r.Post("/trips", operatorHandler.HandleCreateTrip)
+				r.Post("/trips/{id}/assign", operatorHandler.HandleAssignOutsource)
+				r.Post("/trips/{id}/dispatch", operatorHandler.HandleDispatchTrip)
+			})
+
+			// Fleet Features
+			r.Group(func(r chi.Router) {
+				r.Use(middleware.FeatureGate(tenantRepo, models.FeatureFleetManagement))
+				r.Get("/vehicles", fleetHandler.ListVehicles)
+				r.Post("/vehicles", fleetHandler.CreateVehicle)
+				r.Get("/drivers", fleetHandler.ListDrivers)
+				r.Post("/drivers", fleetHandler.CreateDriver)
+			})
+
+			// Team Features
+			r.Group(func(r chi.Router) {
+				r.Use(middleware.FeatureGate(tenantRepo, models.FeatureTeamManagement))
+				r.Get("/users", userHandler.HandleListUsers)
+				r.Post("/users", userHandler.CreateUser)
+			})
 		})
 
 		// Companies

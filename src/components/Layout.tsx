@@ -12,7 +12,9 @@ import {
     Car,
     User,
     Users,
-    DollarSign
+    DollarSign,
+    Shield,
+    Server
 } from 'lucide-react';
 import { useAuthStore } from '../lib/auth';
 import ChangePasswordModal from './ChangePasswordModal';

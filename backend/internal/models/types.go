@@ -24,7 +24,8 @@ const (
 	RoleOps           UserRole = "OPS"
 	RoleSupplierAdmin UserRole = "SUPPLIER_ADMIN"
 	RoleDispatcher    UserRole = "DISPATCHER"
-	RolePartner       UserRole = "PARTNER" // New
+	RolePartner       UserRole = "PARTNER"
+	RoleSuperAdmin    UserRole = "SUPER_ADMIN"
 )
 
 type VehicleStatus string
@@ -90,14 +91,15 @@ type Company struct {
 }
 
 type User struct {
-	ID                     uuid.UUID `db:"id" json:"id"`
-	CompanyID              uuid.UUID `db:"company_id" json:"company_id"`
-	Role                   UserRole  `db:"role" json:"role"`
-	Email                  string    `db:"email" json:"email"`
-	PasswordHash           string    `db:"password_hash" json:"-"`
-	Name                   string    `db:"name" json:"name"`
-	PasswordChangeRequired bool      `db:"password_change_required" json:"password_change_required"`
-	CreatedAt              time.Time `db:"created_at" json:"created_at"`
+	ID                     uuid.UUID     `db:"id" json:"id"`
+	CompanyID              uuid.NullUUID `db:"company_id" json:"company_id"`
+	Role                   UserRole      `db:"role" json:"role"`
+	Email                  string        `db:"email" json:"email"`
+	PasswordHash           string        `db:"password_hash" json:"-"`
+	Name                   string        `db:"name" json:"name"`
+	IsSuperAdmin           bool          `db:"is_super_admin" json:"is_super_admin"`
+	PasswordChangeRequired bool          `db:"password_change_required" json:"password_change_required"`
+	CreatedAt              time.Time     `db:"created_at" json:"created_at"`
 }
 
 type Vehicle struct {

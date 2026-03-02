@@ -54,6 +54,7 @@ func RunMigrations() error {
 	// Run additional migrations
 	migrations := []string{
 		"db/migrations/02_outsource_companies.sql",
+		"db/migrations/03_multi_tenancy.sql",
 	}
 	for _, path := range migrations {
 		data, err := os.ReadFile(path)
@@ -101,18 +102,38 @@ func SeedAdmin() {
 		}
 	}
 
-	// 3. Upsert the admin user — on conflict update password hash so a redeploy resets it
-	_, err = DB.Exec(`
-		INSERT INTO users (company_id, role, email, password_hash, name)
-		VALUES ($1, 'ADMIN', $2, $3, 'Admin')
-		ON CONFLICT (email) DO UPDATE
-		SET password_hash = EXCLUDED.password_hash,
-		    company_id    = EXCLUDED.company_id
-	`, companyID, adminEmail, string(hashed))
+	log.Printf("SeedAdmin: admin user '%s' is ready (company_id=%s)", adminEmail, companyID)
+
+	// 4. Upsert Tenant entry for the operator
+	var tenantID string
+	err = DB.QueryRow(`
+		INSERT INTO tenants (company_id, name, slug, status, plan)
+		VALUES ($1, 'LimoXL Operator', 'limoxl-operator', 'ACTIVE', 'PROFESSIONAL')
+		ON CONFLICT (company_id) DO UPDATE SET name = EXCLUDED.name
+		RETURNING id
+	`, companyID).Scan(&tenantID)
 	if err != nil {
-		log.Printf("SeedAdmin: failed to upsert admin user: %v", err)
-		return
+		err2 := DB.QueryRow(`SELECT id FROM tenants WHERE company_id = $1`, companyID).Scan(&tenantID)
+		if err2 != nil {
+			log.Printf("SeedAdmin: failed to get tenant ID: %v", err2)
+			return
+		}
 	}
 
-	log.Printf("SeedAdmin: admin user '%s' is ready (company_id=%s)", adminEmail, companyID)
+	// 5. Enable all features for this seeded tenant
+	features := []string{
+		"dispatch", "outsource_marketplace", "fleet_management",
+		"team_management", "invoicing", "partner_portal", "analytics",
+	}
+	for _, f := range features {
+		_, err = DB.Exec(`
+			INSERT INTO tenant_features (tenant_id, feature_key, is_enabled)
+			VALUES ($1, $2, true)
+			ON CONFLICT (tenant_id, feature_key) DO NOTHING
+		`, tenantID, f)
+		if err != nil {
+			log.Printf("SeedAdmin: failed to seed feature %s: %v", f, err)
+		}
+	}
+	log.Printf("SeedAdmin: tenant '%s' and features are ready", tenantID)
 }

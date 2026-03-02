@@ -12,6 +12,8 @@ import SubmittedQuotes from './pages/operator/SubmittedQuotes';
 import TeamManagement from './pages/operator/TeamManagement';
 import Dispatch from './pages/operator/Dispatch';
 import SecureDriverLink from './pages/SecureDriverLink';
+import TenantDashboard from './pages/superadmin/TenantDashboard';
+import TenantDetail from './pages/superadmin/TenantDetail';
 
 function App() {
     return (
@@ -30,6 +32,10 @@ function App() {
                     <Route path="dispatch" element={<Dispatch />} />
                     <Route path="quotes" element={<SubmittedQuotes />} />
                     <Route path="team" element={<TeamManagement />} />
+                    
+                    {/* SuperAdmin Routes */}
+                    <Route path="superadmin/dashboard" element={<TenantDashboard />} />
+                    <Route path="superadmin/tenants/:id" element={<TenantDetail />} />
                 </Route>
                 <Route path="/login" element={<Login />} />
                 <Route path="/link/:token" element={<SecureDriverLink />} />

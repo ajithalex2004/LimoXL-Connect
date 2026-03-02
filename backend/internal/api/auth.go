@@ -12,11 +12,15 @@ import (
 )
 
 type AuthHandler struct {
-	UserRepo *repository.PostgresUserRepo
+	UserRepo   *repository.PostgresUserRepo
+	TenantRepo *repository.TenantRepository
 }
 
-func NewAuthHandler(userRepo *repository.PostgresUserRepo) *AuthHandler {
-	return &AuthHandler{UserRepo: userRepo}
+func NewAuthHandler(userRepo *repository.PostgresUserRepo, tenantRepo *repository.TenantRepository) *AuthHandler {
+	return &AuthHandler{
+		UserRepo:   userRepo,
+		TenantRepo: tenantRepo,
+	}
 }
 
 type LoginRequest struct {
@@ -49,8 +53,24 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 3. Generate Token
-	token, err := middleware.GenerateToken(user.ID.String(), user.CompanyID.String(), string(user.Role))
+	// 3. Handle Multi-Tenancy Claims
+	var tenantID string
+	var companyID string
+	if user.IsSuperAdmin {
+		tenantID = "" // Global scope
+		companyID = ""
+	} else if user.CompanyID.Valid {
+		companyID = user.CompanyID.UUID.String()
+		tenant, err := h.TenantRepo.GetByCompanyID(r.Context(), user.CompanyID.UUID)
+		if err == nil {
+			tenantID = tenant.ID.String()
+		}
+		// If tenant lookup fails, we still allow login but tenantID will be empty
+		// (though in a strict multi-tenant app we might reject here)
+	}
+
+	// 4. Generate Token
+	token, err := middleware.GenerateToken(user.ID.String(), companyID, tenantID, string(user.Role), user.IsSuperAdmin)
 	if err != nil {
 		http.Error(w, "Error generating token", http.StatusInternalServerError)
 		return
