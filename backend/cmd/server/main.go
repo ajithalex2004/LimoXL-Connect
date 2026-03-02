@@ -159,6 +159,7 @@ func main() {
 			r.Put("/tenants/{id}", superAdminHandler.HandleUpdateTenant)
 			r.Post("/tenants/{id}/features", superAdminHandler.HandleToggleFeature)
 			r.Post("/impersonate/{id}", superAdminHandler.HandleSwitchTenant)
+			r.Delete("/tenants/{id}", superAdminHandler.HandleDeleteTenant)
 		})
 
 		// Operator Routes — all protected by AuthMiddleware

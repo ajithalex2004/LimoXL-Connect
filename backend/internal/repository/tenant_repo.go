@@ -147,3 +147,10 @@ func (r *TenantRepository) Update(ctx context.Context, t *models.Tenant) error {
 	_, err := r.DB.ExecContext(ctx, query, t.ID, t.Name, t.Slug, t.Status, t.Plan, t.MaxUsers)
 	return err
 }
+
+// Delete removes a tenant and its features (cascading)
+func (r *TenantRepository) Delete(ctx context.Context, id uuid.UUID) error {
+	query := `DELETE FROM tenants WHERE id = $1`
+	_, err := r.DB.ExecContext(ctx, query, id)
+	return err
+}

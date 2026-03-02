@@ -12,7 +12,10 @@ import {
     Plus,
     X,
     Calendar,
-    ArrowUpRight
+    ArrowUpRight,
+    Edit2,
+    Trash2,
+    Power
 } from 'lucide-react';
 
 const FEATURE_LABELS: Record<string, string> = {
@@ -32,7 +35,9 @@ const TenantDashboard = () => {
     const [selectedTenant, setSelectedTenant] = useState<TenantWithFeatures | null>(null);
     const [isFeatureModalOpen, setFeatureModalOpen] = useState(false);
     const [isCreateModalOpen, setCreateModalOpen] = useState(false);
+    const [isEditModalOpen, setEditModalOpen] = useState(false);
     const [newTenant, setNewTenant] = useState<Partial<Tenant>>({ name: '', slug: '', plan: 'STARTER' });
+    const [editTenant, setEditTenant] = useState<Partial<Tenant> | null>(null);
 
     useEffect(() => {
         fetchTenants();
@@ -59,6 +64,39 @@ const TenantDashboard = () => {
             fetchTenants();
         } catch (error) {
             console.error('Failed to create tenant:', error);
+        }
+    };
+
+    const handleUpdateTenant = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editTenant || !editTenant.id) return;
+        try {
+            await superAdminService.updateTenant(editTenant.id, editTenant);
+            setEditModalOpen(false);
+            setEditTenant(null);
+            fetchTenants();
+        } catch (error) {
+            console.error('Failed to update tenant:', error);
+        }
+    };
+
+    const handleDeleteTenant = async (id: string) => {
+        if (!window.confirm('Are you absolutely sure? This will remove all tenant metadata and history.')) return;
+        try {
+            await superAdminService.deleteTenant(id);
+            fetchTenants();
+        } catch (error) {
+            console.error('Failed to delete tenant:', error);
+        }
+    };
+
+    const handleToggleStatus = async (tenant: Tenant) => {
+        const newStatus = tenant.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
+        try {
+            await superAdminService.updateTenant(tenant.id, { ...tenant, status: newStatus });
+            fetchTenants();
+        } catch (error) {
+            console.error('Failed to toggle tenant status:', error);
         }
     };
 
@@ -249,6 +287,35 @@ const TenantDashboard = () => {
                                         <div className="flex items-center justify-end gap-2">
                                             <button 
                                                 onClick={() => {
+                                                    setEditTenant(tenant);
+                                                    setEditModalOpen(true);
+                                                }}
+                                                className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                                                title="Edit Instance"
+                                            >
+                                                <Edit2 size={16} />
+                                            </button>
+                                            <button 
+                                                onClick={() => handleToggleStatus(tenant)}
+                                                className={`p-2 rounded-lg transition-all ${
+                                                    tenant.status === 'ACTIVE' 
+                                                        ? 'text-emerald-400 hover:text-amber-600 hover:bg-amber-50' 
+                                                        : 'text-amber-400 hover:text-emerald-600 hover:bg-emerald-50'
+                                                }`}
+                                                title={tenant.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
+                                            >
+                                                <Power size={16} />
+                                            </button>
+                                            <button 
+                                                onClick={() => handleDeleteTenant(tenant.id)}
+                                                className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                                title="Burn Node (Delete)"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                            <div className="w-px h-4 bg-gray-100 mx-1"></div>
+                                            <button 
+                                                onClick={() => {
                                                     setSelectedTenant(tenant);
                                                     setFeatureModalOpen(true);
                                                 }}
@@ -328,6 +395,60 @@ const TenantDashboard = () => {
                 </div>
             )}
 
+            {/* Edit Tenant Modal */}
+            {isEditModalOpen && editTenant && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in zoom-in duration-300">
+                    <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden">
+                        <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                            <h2 className="text-xl font-bold text-gray-900">Configure Instance</h2>
+                            <button onClick={() => setEditModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <form onSubmit={handleUpdateTenant} className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Company Name</label>
+                                <input 
+                                    type="text"
+                                    required
+                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all"
+                                    value={editTenant.name || ''}
+                                    onChange={(e) => setEditTenant({...editTenant, name: e.target.value})}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Node Identifier (Slug)</label>
+                                <input 
+                                    type="text"
+                                    required
+                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all"
+                                    value={editTenant.slug || ''}
+                                    onChange={(e) => setEditTenant({...editTenant, slug: e.target.value.toLowerCase().replace(/\s+/g, '-')})}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Allocation Plan</label>
+                                <select 
+                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all"
+                                    value={editTenant.plan}
+                                    onChange={(e) => setEditTenant({...editTenant, plan: e.target.value as Tenant['plan']})}
+                                >
+                                    <option value="STARTER">Starter Pack</option>
+                                    <option value="PROFESSIONAL">Professional Tier</option>
+                                    <option value="ENTERPRISE">Enterprise Node</option>
+                                </select>
+                            </div>
+                            <button 
+                                type="submit"
+                                className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg hover:bg-indigo-700 transition-all active:scale-95 mt-4"
+                            >
+                                Commit Changes
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
+            
             {/* Feature Gating Modal (Tenant Config) */}
             {isFeatureModalOpen && selectedTenant && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in zoom-in duration-300">

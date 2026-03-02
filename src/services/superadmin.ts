@@ -50,6 +50,11 @@ export const superAdminService = {
         return response.data;
     },
 
+    deleteTenant: async (id: string) => {
+        const response = await api.delete(`superadmin/tenants/${id}`);
+        return response.data;
+    },
+
     switchTenant: async (tenantId: string) => {
         const response = await api.post(`superadmin/impersonate/${tenantId}`);
         const { token } = response.data;

@@ -167,3 +167,20 @@ func (h *SuperAdminHandler) HandleSwitchTenant(w http.ResponseWriter, r *http.Re
 		"token": token,
 	})
 }
+
+// HandleDeleteTenant removes a tenant
+func (h *SuperAdminHandler) HandleDeleteTenant(w http.ResponseWriter, r *http.Request) {
+	tenantIDStr := chi.URLParam(r, "id")
+	tenantID, err := uuid.Parse(tenantIDStr)
+	if err != nil {
+		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.TenantRepo.Delete(r.Context(), tenantID); err != nil {
+		http.Error(w, "Failed to delete tenant", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
