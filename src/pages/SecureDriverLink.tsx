@@ -18,6 +18,7 @@ interface TripDetails {
     status: string;
     pickup_landmark?: string;
     dropoff_landmark?: string;
+    service_type?: string;
 }
 
 const SecureDriverLink = () => {
@@ -78,8 +79,16 @@ const SecureDriverLink = () => {
                 {/* Trip Info Card */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                     <div className="p-4 border-b border-gray-100 bg-gray-50/50">
-                        <p className="text-sm text-gray-500">Booking Reference</p>
-                        <p className="text-lg font-bold text-gray-900">{trip.booking_reference}</p>
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <p className="text-sm text-gray-500">Booking Reference</p>
+                                <p className="text-lg font-bold text-gray-900">{trip.booking_reference}</p>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-sm text-gray-500">Request Type</p>
+                                <p className="text-xs font-bold text-blue-600 uppercase bg-blue-50 px-2 py-0.5 rounded">{trip.service_type || 'One Way'}</p>
+                            </div>
+                        </div>
                     </div>
 
                     <div className="p-4 space-y-4">
