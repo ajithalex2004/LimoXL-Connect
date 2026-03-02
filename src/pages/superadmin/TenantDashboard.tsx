@@ -31,6 +31,8 @@ const TenantDashboard = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedTenant, setSelectedTenant] = useState<TenantWithFeatures | null>(null);
     const [isFeatureModalOpen, setFeatureModalOpen] = useState(false);
+    const [isCreateModalOpen, setCreateModalOpen] = useState(false);
+    const [newTenant, setNewTenant] = useState({ name: '', slug: '', plan: 'STARTER' });
 
     useEffect(() => {
         fetchTenants();
@@ -45,6 +47,26 @@ const TenantDashboard = () => {
             console.error('Failed to fetch tenants:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleCreateTenant = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            await superAdminService.createTenant(newTenant);
+            setCreateModalOpen(false);
+            setNewTenant({ name: '', slug: '', plan: 'STARTER' });
+            fetchTenants();
+        } catch (error) {
+            console.error('Failed to create tenant:', error);
+        }
+    };
+
+    const handleSwitchTenant = async (tenantId: string) => {
+        try {
+            await superAdminService.switchTenant(tenantId);
+        } catch (error) {
+            console.error('Failed to switch tenant:', error);
         }
     };
 
@@ -95,7 +117,10 @@ const TenantDashboard = () => {
                         <Filter size={18} />
                         Filters
                     </button>
-                    <button className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-all shadow-md active:scale-95">
+                    <button 
+                        onClick={() => setCreateModalOpen(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-all shadow-md active:scale-95"
+                    >
                         <Plus size={18} />
                         New Tenant
                     </button>
@@ -232,8 +257,12 @@ const TenantDashboard = () => {
                                             >
                                                 <Settings size={18} />
                                             </button>
-                                            <button className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all" title="View Detail">
-                                                <ArrowUpRight size={18} />
+                                            <button 
+                                                onClick={() => handleSwitchTenant(tenant.id)}
+                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg font-bold text-xs hover:bg-indigo-600 hover:text-white transition-all group/btn"
+                                            >
+                                                Enter
+                                                <ArrowUpRight size={14} className="group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
                                             </button>
                                         </div>
                                     </td>
@@ -243,6 +272,61 @@ const TenantDashboard = () => {
                     </table>
                 </div>
             </div>
+
+            {/* Create Tenant Modal */}
+            {isCreateModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in zoom-in duration-300">
+                    <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden">
+                        <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                            <h2 className="text-xl font-bold text-gray-900">Provision New Tenant</h2>
+                            <button onClick={() => setCreateModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <form onSubmit={handleCreateTenant} className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Company Name</label>
+                                <input 
+                                    type="text"
+                                    required
+                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all"
+                                    value={newTenant.name}
+                                    onChange={(e) => setNewTenant({...newTenant, name: e.target.value})}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Node Identifier (Slug)</label>
+                                <input 
+                                    type="text"
+                                    required
+                                    placeholder="e.g. apex-limo"
+                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all"
+                                    value={newTenant.slug}
+                                    onChange={(e) => setNewTenant({...newTenant, slug: e.target.value.toLowerCase().replace(/\s+/g, '-')})}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Allocation Plan</label>
+                                <select 
+                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all"
+                                    value={newTenant.plan}
+                                    onChange={(e) => setNewTenant({...newTenant, plan: e.target.value})}
+                                >
+                                    <option value="STARTER">Starter Pack</option>
+                                    <option value="PROFESSIONAL">Professional Tier</option>
+                                    <option value="ENTERPRISE">Enterprise Node</option>
+                                </select>
+                            </div>
+                            <button 
+                                type="submit"
+                                className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg hover:bg-indigo-700 transition-all active:scale-95 mt-4"
+                            >
+                                Provision Instance
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             {/* Feature Gating Modal (Tenant Config) */}
             {isFeatureModalOpen && selectedTenant && (

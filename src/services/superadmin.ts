@@ -48,5 +48,15 @@ export const superAdminService = {
             is_enabled: isEnabled
         });
         return response.data;
+    },
+
+    switchTenant: async (tenantId: string) => {
+        const response = await api.post(`superadmin/impersonate/${tenantId}`);
+        const { token } = response.data;
+        if (token) {
+            localStorage.setItem('limoxl_auth_token', token);
+            window.location.href = '/'; // Refresh to load new context
+        }
+        return response.data;
     }
 };

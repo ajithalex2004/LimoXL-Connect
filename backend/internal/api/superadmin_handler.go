@@ -34,27 +34,53 @@ func (h *SuperAdminHandler) HandleListTenants(w http.ResponseWriter, r *http.Req
 	json.NewEncoder(w).Encode(tenants)
 }
 
-// HandleCreateTenant creates a new tenant
+// HandleCreateTenant creates a new tenant and an associated company
 func (h *SuperAdminHandler) HandleCreateTenant(w http.ResponseWriter, r *http.Request) {
-	var req models.Tenant
+	var req struct {
+		Name string `json:"name"`
+		Slug string `json:"slug"`
+		Plan string `json:"plan"`
+	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid body", http.StatusBadRequest)
 		return
 	}
 
-	if err := h.TenantRepo.Create(r.Context(), &req); err != nil {
-		http.Error(w, "Failed to create tenant", http.StatusInternalServerError)
+	// 1. Create a Company for this tenant first
+	var companyID uuid.UUID
+	err := h.TenantRepo.DB.QueryRowContext(r.Context(), `
+		INSERT INTO companies (name, type, verified)
+		VALUES ($1, 'DEMAND', true)
+		RETURNING id
+	`, req.Name).Scan(&companyID)
+	if err != nil {
+		http.Error(w, "Failed to create company for tenant: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// Initialize with all features disabled by default
+	// 2. Create the Tenant
+	tenant := &models.Tenant{
+		CompanyID: &companyID,
+		Name:      req.Name,
+		Slug:      req.Slug,
+		Status:    "ACTIVE",
+		Plan:      models.TenantPlan(req.Plan),
+		MaxUsers:  10,
+	}
+
+	if err := h.TenantRepo.Create(r.Context(), tenant); err != nil {
+		http.Error(w, "Failed to create tenant: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// 3. Initialize features
 	for _, key := range models.AllFeatures {
-		h.TenantRepo.UpdateFeature(r.Context(), req.ID, key, false)
+		h.TenantRepo.UpdateFeature(r.Context(), tenant.ID, key, true)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(req)
+	json.NewEncoder(w).Encode(tenant)
 }
 
 // HandleUpdateTenant updates tenant details
@@ -107,4 +133,36 @@ func (h *SuperAdminHandler) HandleToggleFeature(w http.ResponseWriter, r *http.R
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"status": "Feature Updated"})
+}
+// HandleSwitchTenant generates a new JWT token impersonating a tenant's context
+func (h *SuperAdminHandler) HandleSwitchTenant(w http.ResponseWriter, r *http.Request) {
+	tenantIDStr := chi.URLParam(r, "id")
+	tenantID, err := uuid.Parse(tenantIDStr)
+	if err != nil {
+		http.Error(w, "Invalid Tenant ID", http.StatusBadRequest)
+		return
+	}
+
+	// Verify tenant exists and get company ID
+	var companyID string
+	var role string = "ADMIN" // Default to Admin role within the tenant
+	err = h.TenantRepo.DB.QueryRowContext(r.Context(), "SELECT company_id FROM tenants WHERE id = $1", tenantID).Scan(&companyID)
+	if err != nil {
+		http.Error(w, "Tenant not found", http.StatusNotFound)
+		return
+	}
+
+	claims, _ := r.Context().Value(middleware.ClaimsKey).(*middleware.Claims)
+
+	// Generate new token with TenantID and CompanyID
+	token, err := middleware.GenerateToken(claims.UserID, companyID, tenantID.String(), role, true)
+	if err != nil {
+		http.Error(w, "Failed to generate impersonation token", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"token": token,
+	})
 }
