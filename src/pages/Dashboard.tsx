@@ -69,10 +69,12 @@ const Dashboard = () => {
                     new Date(a.created_at || a.pickup_time || Date.now()).getTime()
                 );
 
-            // Filter for Dashboard "Recent RFQ Requests" (only New RFQs)
-            const recentRfqs = allActivities.filter(a => a.status === 'MARKETPLACE_SEARCH');
+            // Include all relevant activities: RFQs, assigned trips, and completed trips
+            const recentActivities = allActivities.filter(a => 
+                ['MARKETPLACE_SEARCH', 'OFFERED', 'DRIVER_ASSIGNED', 'EN_ROUTE', 'IN_TRIP', 'COMPLETED'].includes(a.status)
+            ).slice(0, 10); // Limit to top 10 for dashboard performance
 
-            setActivities(recentRfqs);
+            setActivities(recentActivities);
         } catch (error) {
             console.error("Failed to load activities", error);
         } finally {
@@ -186,7 +188,7 @@ const Dashboard = () => {
 
             {!isOperator && !isSuperAdmin && (
                 <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent RFQ Requests</h2>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h2>
                     <div className="space-y-4">
                         {activities.length === 0 ? (
                             <p className="text-gray-500 text-center py-4">No recent activity.</p>
@@ -203,7 +205,8 @@ const Dashboard = () => {
                                                 <div>
                                                     <p className="text-sm font-bold text-gray-900">
                                                         {item.status === 'MARKETPLACE_SEARCH' ? 'New RFQ' :
-                                                            item.status === 'OFFERED' ? 'Quote Sent' : 'Assigned Trip'}: {item.booking_reference}
+                                                            item.status === 'OFFERED' ? 'Quote Sent' : 
+                                                            item.status === 'COMPLETED' ? 'Completed Trip' : 'Assigned Trip'}: {item.booking_reference}
                                                     </p>
                                                     <p className="text-xs text-blue-600 font-medium">From {item.supplier_name || 'System'}</p>
                                                 </div>
