@@ -27,9 +27,18 @@ func NewFleetHandler(vRepo repository.VehicleRepository, dRepo repository.Driver
 // getCompanyIDFromClaims extracts the company UUID from the authenticated JWT claims.
 func getCompanyIDFromClaims(r *http.Request) (uuid.UUID, bool) {
 	claims, ok := r.Context().Value(middleware.ClaimsKey).(*middleware.Claims)
-	if !ok || claims == nil || claims.CompanyID == "" {
+	if !ok || claims == nil {
 		return uuid.Nil, false
 	}
+
+	if claims.IsSuperAdmin {
+		return uuid.Nil, true // SuperAdmin has no specific company, but is authorized
+	}
+
+	if claims.CompanyID == "" {
+		return uuid.Nil, false
+	}
+
 	id, err := uuid.Parse(claims.CompanyID)
 	if err != nil {
 		return uuid.Nil, false

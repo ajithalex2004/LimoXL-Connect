@@ -299,9 +299,15 @@ func (h *OperatorHandler) HandleCreateTrip(w http.ResponseWriter, r *http.Reques
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
+	if claims.IsSuperAdmin {
+		// SuperAdmin cannot create a trip without a company context in this endpoint
+		http.Error(w, "SuperAdmin must be linked to a company to create trips via this endpoint", http.StatusForbidden)
+		return
+	}
+
 	operatorID, err := uuid.Parse(claims.CompanyID)
 	if err != nil {
-		http.Error(w, "Invalid company ID in token", http.StatusUnauthorized)
+		http.Error(w, "Invalid company ID in token", http.StatusForbidden)
 		return
 	}
 

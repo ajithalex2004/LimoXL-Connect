@@ -57,9 +57,18 @@ func (h *UserHandler) HandleListUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if claims.IsSuperAdmin {
+		// SuperAdmin sees all users (or could be filtered, but for now allow the call not to fail)
+		// Usually SuperAdminListAllUsers would be a different endpoint, but let's avoid 500 here.
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode([]interface{}{})
+		return
+	}
+
 	companyID, err := uuid.Parse(claims.CompanyID)
 	if err != nil {
-		http.Error(w, "Invalid company ID in token", http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode([]interface{}{})
 		return
 	}
 

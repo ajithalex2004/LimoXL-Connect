@@ -23,20 +23,33 @@ func NewPartnerHandler(repo repository.TripRepository) *PartnerHandler {
 }
 
 func (h *PartnerHandler) getPartnerID(r *http.Request) (uuid.UUID, error) {
-	claims, ok := r.Context().Value("user").(*middleware.Claims)
+	claims, ok := r.Context().Value(middleware.ClaimsKey).(*middleware.Claims)
 	if !ok {
-		// Fallback for dev/demo if auth middleware is not applied strictly
-		// or if we want to allow non-authed access (not recommended for production)
-		// return uuid.MustParse("a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11"), nil
 		return uuid.Nil, errors.New("unauthorized")
 	}
+
+	if claims.IsSuperAdmin {
+		return uuid.Nil, nil // SuperAdmin has no company context
+	}
+
+	if claims.CompanyID == "" {
+		return uuid.Nil, errors.New("no company associated with user")
+	}
+
 	return uuid.Parse(claims.CompanyID)
 }
 
 func (h *PartnerHandler) ListRFQs(w http.ResponseWriter, r *http.Request) {
 	partnerID, err := h.getPartnerID(r)
 	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	// Super admins see nothing for partner-specific views (or could see all)
+	if partnerID == uuid.Nil {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode([]interface{}{})
 		return
 	}
 
@@ -52,7 +65,13 @@ func (h *PartnerHandler) ListRFQs(w http.ResponseWriter, r *http.Request) {
 func (h *PartnerHandler) HandleListRFQHistory(w http.ResponseWriter, r *http.Request) {
 	partnerID, err := h.getPartnerID(r)
 	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	if partnerID == uuid.Nil {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode([]interface{}{})
 		return
 	}
 
@@ -68,7 +87,13 @@ func (h *PartnerHandler) HandleListRFQHistory(w http.ResponseWriter, r *http.Req
 func (h *PartnerHandler) ListAssignedTrips(w http.ResponseWriter, r *http.Request) {
 	partnerID, err := h.getPartnerID(r)
 	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	if partnerID == uuid.Nil {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode([]interface{}{})
 		return
 	}
 
