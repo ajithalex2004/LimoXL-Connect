@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type SuperAdminHandler struct {
@@ -183,4 +184,59 @@ func (h *SuperAdminHandler) HandleDeleteTenant(w http.ResponseWriter, r *http.Re
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// HandleCreateTenantAdmin creates an admin user for a specific tenant
+func (h *SuperAdminHandler) HandleCreateTenantAdmin(w http.ResponseWriter, r *http.Request) {
+	tenantIDStr := chi.URLParam(r, "id")
+	tenantID, err := uuid.Parse(tenantIDStr)
+	if err != nil {
+		http.Error(w, "Invalid Tenant ID", http.StatusBadRequest)
+		return
+	}
+
+	var req struct {
+		Name     string `json:"name"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid body", http.StatusBadRequest)
+		return
+	}
+
+	// 1. Get CompanyID from Tenant
+	var companyID uuid.UUID
+	err = h.TenantRepo.DB.QueryRowContext(r.Context(), "SELECT company_id FROM tenants WHERE id = $1", tenantID).Scan(&companyID)
+	if err != nil {
+		http.Error(w, "Tenant not found or has no linked company", http.StatusNotFound)
+		return
+	}
+
+	// 2. Hash Password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		http.Error(w, "Failed to hash password", http.StatusInternalServerError)
+		return
+	}
+
+	// 3. Create User
+	user := &models.User{
+		CompanyID:              uuid.NullUUID{UUID: companyID, Valid: true},
+		Name:                   req.Name,
+		Email:                  req.Email,
+		PasswordHash:           string(hashedPassword),
+		Role:                   models.RoleAdmin,
+		IsSuperAdmin:           false,
+		PasswordChangeRequired: true,
+	}
+
+	if err := h.UserRepo.Create(r.Context(), user); err != nil {
+		http.Error(w, "Failed to create admin user: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(user)
 }

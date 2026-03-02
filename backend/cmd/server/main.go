@@ -158,6 +158,7 @@ func main() {
 			r.Post("/tenants", superAdminHandler.HandleCreateTenant)
 			r.Put("/tenants/{id}", superAdminHandler.HandleUpdateTenant)
 			r.Post("/tenants/{id}/features", superAdminHandler.HandleToggleFeature)
+			r.Post("/tenants/{id}/admins", superAdminHandler.HandleCreateTenantAdmin)
 			r.Post("/impersonate/{id}", superAdminHandler.HandleSwitchTenant)
 			r.Delete("/tenants/{id}", superAdminHandler.HandleDeleteTenant)
 		})

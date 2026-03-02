@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { superAdminService, TenantWithFeatures } from '../../services/superadmin';
-import { ArrowLeft, Building2, Calendar, Globe, Shield, Users as UsersIcon, Zap } from 'lucide-react';
+import { ArrowLeft, Building2, Calendar, Globe, Shield, Users as UsersIcon, Zap, Key, Mail, X } from 'lucide-react';
 import { format } from 'date-fns';
 
 const TenantDetail = () => {
@@ -9,6 +9,11 @@ const TenantDetail = () => {
     const navigate = useNavigate();
     const [tenant, setTenant] = useState<TenantWithFeatures | null>(null);
     const [loading, setLoading] = useState(true);
+    const [isProvisionModalOpen, setIsProvisionModalOpen] = useState(false);
+    const [adminName, setAdminName] = useState('');
+    const [adminEmail, setAdminEmail] = useState('');
+    const [adminPassword, setAdminPassword] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         if (id) fetchTenant();
@@ -24,6 +29,31 @@ const TenantDetail = () => {
             console.error('Failed to fetch tenant:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleProvisionAdmin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!id) return;
+
+        try {
+            setIsSubmitting(true);
+            await superAdminService.createTenantAdmin(id, {
+                name: adminName,
+                email: adminEmail,
+                password: adminPassword
+            });
+            alert('Admin provisioned successfully!');
+            setIsProvisionModalOpen(false);
+            setAdminName('');
+            setAdminEmail('');
+            setAdminPassword('');
+            fetchTenant();
+        } catch (error) {
+            console.error('Failed to provision admin:', error);
+            alert('Failed to provision admin user');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -133,6 +163,107 @@ const TenantDetail = () => {
                     </div>
                 </div>
             </div>
+
+            <div className="mt-8 bg-indigo-900 rounded-3xl p-8 border border-white/10 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-8 text-white/5 pointer-events-none group-hover:scale-110 transition-transform">
+                    <Shield size={120} />
+                </div>
+                <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div>
+                        <h3 className="text-2xl font-bold text-white mb-2 flex items-center gap-3">
+                            <Key className="text-indigo-400" />
+                            Identity & Access
+                        </h3>
+                        <p className="text-indigo-200 text-sm max-w-lg">
+                            Provision administrative credentials for this node. New administrators will be required 
+                            to reset their passwords upon first login to ensure cryptographic security.
+                        </p>
+                    </div>
+                    <button 
+                        onClick={() => setIsProvisionModalOpen(true)}
+                        className="px-6 py-3 bg-white text-indigo-900 rounded-2xl font-bold hover:bg-indigo-50 transition-all shadow-xl shadow-black/20 flex items-center gap-2 active:scale-95"
+                    >
+                        Provision Admin Authority
+                    </button>
+                </div>
+            </div>
+
+            {/* Provision Modal */}
+            {isProvisionModalOpen && (
+                <div className="fixed inset-0 bg-indigo-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-[2.5rem] w-full max-w-md p-8 shadow-2xl relative animate-in fade-in zoom-in duration-200">
+                        <button 
+                            onClick={() => setIsProvisionModalOpen(false)}
+                            className="absolute top-6 right-6 p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors"
+                        >
+                            <X size={20} />
+                        </button>
+
+                        <div className="mb-8">
+                            <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-4">
+                                <UsersIcon size={32} />
+                            </div>
+                            <h2 className="text-2xl font-black text-gray-900">Provision Admin</h2>
+                            <p className="text-gray-500 text-sm">Deploy identity for {tenant.name}</p>
+                        </div>
+
+                        <form onSubmit={handleProvisionAdmin} className="space-y-6">
+                            <div>
+                                <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Full Name</label>
+                                <div className="relative">
+                                    <UsersIcon className="absolute left-4 top-3.5 text-gray-400" size={18} />
+                                    <input 
+                                        type="text" 
+                                        required
+                                        value={adminName}
+                                        onChange={(e) => setAdminName(e.target.value)}
+                                        className="w-full bg-gray-50 border-0 rounded-2xl py-3.5 pl-12 pr-4 focus:ring-2 focus:ring-indigo-600 transition-all font-medium text-gray-900"
+                                        placeholder="e.g. John Doe"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Corporate Email</label>
+                                <div className="relative">
+                                    <Mail className="absolute left-4 top-3.5 text-gray-400" size={18} />
+                                    <input 
+                                        type="email" 
+                                        required
+                                        value={adminEmail}
+                                        onChange={(e) => setAdminEmail(e.target.value)}
+                                        className="w-full bg-gray-50 border-0 rounded-2xl py-3.5 pl-12 pr-4 focus:ring-2 focus:ring-indigo-600 transition-all font-medium text-gray-900"
+                                        placeholder="admin@aad-limousine.ae"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Initial Secret</label>
+                                <div className="relative">
+                                    <Key className="absolute left-4 top-3.5 text-gray-400" size={18} />
+                                    <input 
+                                        type="password" 
+                                        required
+                                        value={adminPassword}
+                                        onChange={(e) => setAdminPassword(e.target.value)}
+                                        className="w-full bg-gray-50 border-0 rounded-2xl py-3.5 pl-12 pr-4 focus:ring-2 focus:ring-indigo-600 transition-all font-medium text-gray-900"
+                                        placeholder="••••••••••••"
+                                    />
+                                </div>
+                            </div>
+
+                            <button 
+                                type="submit"
+                                disabled={isSubmitting}
+                                className="w-full bg-indigo-600 text-white rounded-2xl py-4 font-bold hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            >
+                                {isSubmitting ? 'Deploying Access...' : 'Generate Admin Account'}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

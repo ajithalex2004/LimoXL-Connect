@@ -63,5 +63,10 @@ export const superAdminService = {
             window.location.href = '/'; // Refresh to load new context
         }
         return response.data;
+    },
+
+    createTenantAdmin: async (tenantId: string, data: any) => {
+        const response = await api.post(`superadmin/tenants/${tenantId}/admins`, data);
+        return response.data;
     }
 };
