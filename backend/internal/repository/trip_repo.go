@@ -190,6 +190,7 @@ func (r *PostgresTripRepo) ListTrips(ctx context.Context) ([]models.Trip, error)
 	operatorIDStr := "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a00"
 
 	query := `
+		SELECT 
 			id, reference_no, pickup_zone, dropoff_zone, pickup_time,
 			status, passenger_name, passenger_phone, vehicle_type_requested,
 			created_at, rfq_number, pickup_landmark, dropoff_landmark, service_type
