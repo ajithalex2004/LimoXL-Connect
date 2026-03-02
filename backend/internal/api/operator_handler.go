@@ -161,26 +161,28 @@ func (h *OperatorHandler) HandleListOutsourceCompanies(w http.ResponseWriter, r 
 }
 
 func (h *OperatorHandler) HandleListQuotes(w http.ResponseWriter, r *http.Request) {
-	// For MVP, assuming the logged in operator is the "Limo Operator Co"
-	// hardcoded ID from seed
-	operatorIDStr := "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a00"
-	// In real app, extract from context/token
-	operatorID := uuid.MustParse(operatorIDStr)
-
-	fmt.Printf("DEBUG: HandleListQuotes called for OperatorID: %s\n", operatorID)
-
-	quotes, err := h.TripRepo.ListTripOffers(r.Context(), operatorID)
+	claims, ok := r.Context().Value(middleware.ClaimsKey).(*middleware.Claims)
+	if !ok || claims == nil {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode([]interface{}{})
+		return
+	}
+	operatorID, err := uuid.Parse(claims.CompanyID)
 	if err != nil {
-		fmt.Printf("Error listing quotes: %v\n", err) // Simple logging
-		http.Error(w, "Failed to list quotes", http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode([]interface{}{})
 		return
 	}
 
-	fmt.Printf("DEBUG: Found %d quotes\n", len(quotes))
-	for _, q := range quotes {
-		fmt.Printf("  - Quote %s for Trip %s (Status: %s)\n", q.ID, q.TripID, q.Status)
+	quotes, err := h.TripRepo.ListTripOffers(r.Context(), operatorID)
+	if err != nil {
+		fmt.Printf("Error listing quotes: %v\n", err)
+		http.Error(w, "Failed to list quotes", http.StatusInternalServerError)
+		return
 	}
-
+	if quotes == nil {
+		quotes = []models.TripOffer{}
+	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(quotes)
 }
@@ -292,9 +294,16 @@ func (h *OperatorHandler) HandleAssignOutsource(w http.ResponseWriter, r *http.R
 }
 
 func (h *OperatorHandler) HandleCreateTrip(w http.ResponseWriter, r *http.Request) {
-	// Demo ID
-	operatorIDStr := "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a00"
-	operatorID := uuid.MustParse(operatorIDStr)
+	claims, ok := r.Context().Value(middleware.ClaimsKey).(*middleware.Claims)
+	if !ok || claims == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	operatorID, err := uuid.Parse(claims.CompanyID)
+	if err != nil {
+		http.Error(w, "Invalid company ID in token", http.StatusUnauthorized)
+		return
+	}
 
 	var req models.Trip
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
