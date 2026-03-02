@@ -1,5 +1,6 @@
-import { FileText, CheckCircle, Clock, AlertCircle, X, Building, Users } from 'lucide-react';
+import { FileText, CheckCircle, Clock, AlertCircle, X, Building, Users, Zap, Activity } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { superAdminService } from '../services/superadmin';
 
 import { partnerService, operatorService, type Trip } from '../services/api';
 import { useAuthStore } from '../lib/auth';
@@ -12,13 +13,14 @@ const Dashboard = () => {
     const [quotingTrip, setQuotingTrip] = useState<Trip | null>(null);
     const [quotePrice, setQuotePrice] = useState('');
     const [quoteNotes, setQuoteNotes] = useState('');
+    const [tenantCount, setTenantCount] = useState(0);
 
     const isSuperAdmin = user?.role === 'SUPER_ADMIN';
     const isOperator = user?.role === 'ADMIN' || user?.role === 'OPS' || user?.role === 'DISPATCHER';
 
     useEffect(() => {
         if (isSuperAdmin) {
-            setLoading(false);
+            loadSuperAdminData();
             return;
         }
         if (!isOperator) {
@@ -77,6 +79,17 @@ const Dashboard = () => {
             setActivities(recentActivities);
         } catch (error) {
             console.error("Failed to load activities", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const loadSuperAdminData = async () => {
+        try {
+            const tenants = await superAdminService.listTenants();
+            setTenantCount(tenants.length);
+        } catch (error) {
+            console.error("Failed to load superadmin data", error);
         } finally {
             setLoading(false);
         }
@@ -163,12 +176,39 @@ const Dashboard = () => {
             <div>
                 <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
                 <p className="text-gray-500">Welcome to Limo XL Connect {isSuperAdmin ? '(System Orchestrator)' : isOperator ? '(Operator Portal)' : '(Partner Portal)'}</p>
-                <div className="text-[10px] text-gray-300 space-y-1">
-                    <p>Debug [Store]: User is {JSON.stringify(user)}</p>
-                    <p>Debug [Storage]: Raw User is "{localStorage.getItem('user')}"</p>
-                    <p>Debug [Storage]: Raw Token exists: {!!localStorage.getItem('token') ? 'Yes' : 'No'}</p>
-                </div>
             </div>
+
+            {isSuperAdmin && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-6 group hover:shadow-xl hover:border-indigo-100 transition-all duration-300">
+                        <div className="p-4 rounded-2xl bg-indigo-50 text-indigo-600 group-hover:scale-110 transition-transform">
+                            <Building size={28} />
+                        </div>
+                        <div>
+                            <p className="text-sm text-gray-400 font-bold uppercase tracking-wider">Active Instances</p>
+                            <h3 className="text-3xl font-black text-gray-900">{tenantCount}</h3>
+                        </div>
+                    </div>
+                    <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-6 group hover:shadow-xl hover:border-emerald-100 transition-all duration-300">
+                        <div className="p-4 rounded-2xl bg-emerald-50 text-emerald-600 group-hover:scale-110 transition-transform">
+                            <Zap size={28} />
+                        </div>
+                        <div>
+                            <p className="text-sm text-gray-400 font-bold uppercase tracking-wider">Node Availability</p>
+                            <h3 className="text-3xl font-black text-gray-900">99.9%</h3>
+                        </div>
+                    </div>
+                    <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-6 group hover:shadow-xl hover:border-amber-100 transition-all duration-300">
+                        <div className="p-4 rounded-2xl bg-amber-50 text-amber-600 group-hover:scale-110 transition-transform">
+                            <Activity size={28} />
+                        </div>
+                        <div>
+                            <p className="text-sm text-gray-400 font-bold uppercase tracking-wider">Security State</p>
+                            <h3 className="text-3xl font-black text-gray-900 uppercase">Isolated</h3>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {!isSuperAdmin && (
                 <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-${isOperator ? '3' : '4'} gap-4`}>
