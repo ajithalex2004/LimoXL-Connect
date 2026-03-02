@@ -36,6 +36,10 @@ const Layout = () => {
         navigate('/login');
     };
 
+    // Define Nav Items based on Role
+    const getNavItems = () => {
+        const role = user?.role || '';
+
         // Super Admin
         if (role === 'SUPER_ADMIN') {
             return [
