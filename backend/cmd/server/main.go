@@ -118,21 +118,29 @@ func main() {
 
 	// Temp: DB diagnostics endpoint
 	r.Get("/api/debug-db", func(w http.ResponseWriter, r *http.Request) {
-		dbURL := os.Getenv("DATABASE_URL")
-		// Mask password for safety
-		masked := dbURL
-		if len(masked) > 20 {
-			masked = masked[:40] + "***MASKED***" + masked[len(masked)-30:]
-		}
 		var userCount int
-		var adminEmail string
 		db.DB.QueryRow("SELECT COUNT(*) FROM users").Scan(&userCount)
-		db.DB.QueryRow("SELECT COALESCE(email,'none') FROM users WHERE role='ADMIN' LIMIT 1").Scan(&adminEmail)
+
+		rows, _ := db.DB.Query("SELECT email, role, COALESCE(is_super_admin, false) FROM users")
+		type userInfo struct {
+			Email        string `json:"email"`
+			Role         string `json:"role"`
+			IsSuperAdmin bool   `json:"is_super_admin"`
+		}
+		var users []userInfo
+		if rows != nil {
+			for rows.Next() {
+				var u userInfo
+				rows.Scan(&u.Email, &u.Role, &u.IsSuperAdmin)
+				users = append(users, u)
+			}
+			rows.Close()
+		}
+
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]interface{}{
-			"db_url_masked": masked,
-			"user_count":    userCount,
-			"admin_email":   adminEmail,
+			"user_count": userCount,
+			"users":      users,
 		})
 	})
 

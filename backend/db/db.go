@@ -79,45 +79,18 @@ func SeedAdmin() {
 	adminEmail := "admin@limoxlink.com"
 	adminPassword := "admin123"
 
-	// 1. Hash the password fresh every startup
+	// 1. Diagnostics: Ensure Schema is correct (Idempotent)
+	_, _ = DB.Exec(`ALTER TABLE users ALTER COLUMN company_id DROP NOT NULL`)
+	_, _ = DB.Exec(`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_super_admin BOOLEAN DEFAULT FALSE`)
+
+	// 2. Hash the password fresh every startup
 	hashed, err := bcrypt.GenerateFromPassword([]byte(adminPassword), bcrypt.DefaultCost)
 	if err != nil {
 		log.Printf("SeedAdmin: failed to hash password: %v", err)
 		return
 	}
 
-	// 2. Upsert the operator company
-	var companyID string
-	err = DB.QueryRow(`
-		INSERT INTO companies (name, type, verified)
-		VALUES ('LimoXL Operator', 'DEMAND', true)
-		ON CONFLICT DO NOTHING
-		RETURNING id
-	`).Scan(&companyID)
-	if err != nil {
-		// Company already exists — fetch its ID
-		err2 := DB.QueryRow(`SELECT id FROM companies WHERE name = 'LimoXL Operator' LIMIT 1`).Scan(&companyID)
-		if err2 != nil {
-			log.Printf("SeedAdmin: failed to get company ID: %v", err2)
-			return
-		}
-	}
-
-	// 3. Upsert the admin user
-	_, err = DB.Exec(`
-		INSERT INTO users (company_id, role, email, password_hash, name)
-		VALUES ($1, 'ADMIN', $2, $3, 'Admin')
-		ON CONFLICT (email) DO UPDATE
-		SET password_hash = EXCLUDED.password_hash,
-		    company_id    = EXCLUDED.company_id
-	`, companyID, adminEmail, string(hashed))
-	if err != nil {
-		log.Printf("SeedAdmin: failed to upsert admin user: %v", err)
-	} else {
-		log.Printf("SeedAdmin: admin user '%s' is ready", adminEmail)
-	}
-
-	// 4. Upsert the SuperAdmin user
+	// 3. Upsert the SuperAdmin user (NO DEPENDENCY ON COMPANY)
 	superEmail := "superadmin@limoxlink.com"
 	_, err = DB.Exec(`
 		INSERT INTO users (company_id, role, email, password_hash, name, is_super_admin)
@@ -133,7 +106,38 @@ func SeedAdmin() {
 		log.Printf("SeedAdmin: superadmin user '%s' is ready", superEmail)
 	}
 
-	// 4. Upsert Tenant entry for the operator
+	// 4. Upsert the operator company
+	var companyID string
+	// Check if exists first since we don't have unique constraint on name usually
+	err = DB.QueryRow(`SELECT id FROM companies WHERE name = 'LimoXL Operator' LIMIT 1`).Scan(&companyID)
+	if err != nil {
+		// Does not exist, create it
+		err = DB.QueryRow(`
+			INSERT INTO companies (name, type, verified)
+			VALUES ('LimoXL Operator', 'DEMAND', true)
+			RETURNING id
+		`).Scan(&companyID)
+		if err != nil {
+			log.Printf("SeedAdmin: failed to create operator company: %v", err)
+			return
+		}
+	}
+
+	// 5. Upsert the admin user
+	_, err = DB.Exec(`
+		INSERT INTO users (company_id, role, email, password_hash, name)
+		VALUES ($1, 'ADMIN', $2, $3, 'Admin')
+		ON CONFLICT (email) DO UPDATE
+		SET password_hash = EXCLUDED.password_hash,
+		    company_id    = EXCLUDED.company_id
+	`, companyID, adminEmail, string(hashed))
+	if err != nil {
+		log.Printf("SeedAdmin: failed to upsert admin user: %v", err)
+	} else {
+		log.Printf("SeedAdmin: admin user '%s' is ready", adminEmail)
+	}
+
+	// 6. Upsert Tenant entry for the operator
 	var tenantID string
 	err = DB.QueryRow(`
 		INSERT INTO tenants (company_id, name, slug, status, plan)
@@ -142,11 +146,7 @@ func SeedAdmin() {
 		RETURNING id
 	`, companyID).Scan(&tenantID)
 	if err != nil {
-		err2 := DB.QueryRow(`SELECT id FROM tenants WHERE company_id = $1`, companyID).Scan(&tenantID)
-		if err2 != nil {
-			log.Printf("SeedAdmin: failed to get tenant ID: %v", err2)
-			return
-		}
+		_ = DB.QueryRow(`SELECT id FROM tenants WHERE company_id = $1`, companyID).Scan(&tenantID)
 	}
 
 	// 5. Enable all features for this seeded tenant
