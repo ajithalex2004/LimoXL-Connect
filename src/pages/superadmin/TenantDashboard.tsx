@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { superAdminService, TenantWithFeatures } from '../../services/superadmin';
 import { 
-    Users, 
     Globe, 
     ShieldCheck, 
     Settings, 
@@ -12,13 +11,9 @@ import {
     Filter,
     Plus,
     X,
-    CheckCircle,
-    XCircle,
-    Building2,
     Calendar,
     ArrowUpRight
 } from 'lucide-react';
-import { format } from 'date-fns';
 
 const FEATURE_LABELS: Record<string, string> = {
     'dispatch': 'Internal Dispatch',

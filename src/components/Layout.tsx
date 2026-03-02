@@ -36,9 +36,13 @@ const Layout = () => {
         navigate('/login');
     };
 
-    // Define Nav Items based on Role
-    const getNavItems = () => {
-        const role = user?.role || '';
+        // Super Admin
+        if (role === 'SUPER_ADMIN') {
+            return [
+                { name: 'System Dashboard', path: '/superadmin/dashboard', icon: Shield },
+                { name: 'Infrastructure', path: '/superadmin/dashboard', icon: Server },
+            ];
+        }
 
         // Operator / Admin
         if (role === 'ADMIN' || role === 'OPS' || role === 'DISPATCHER') {

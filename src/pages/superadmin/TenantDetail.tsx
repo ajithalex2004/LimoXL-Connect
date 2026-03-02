@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { superAdminService, TenantWithFeatures } from '../../services/superadmin';
 import { ArrowLeft, Building2, Calendar, Globe, Shield, Users as UsersIcon, Zap } from 'lucide-react';
+import { format } from 'date-fns';
 
 const TenantDetail = () => {
     const { id } = useParams<{ id: string }>();
