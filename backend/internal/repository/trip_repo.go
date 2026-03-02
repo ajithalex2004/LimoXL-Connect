@@ -649,6 +649,7 @@ func (r *PostgresTripRepo) CloseInvoice(ctx context.Context, invoiceID uuid.UUID
 
 func (r *PostgresTripRepo) ListOperatorTrips(ctx context.Context, operatorID uuid.UUID) ([]models.Trip, error) {
 	query := `
+		SELECT 
 			id, reference_no, pickup_zone, dropoff_zone, pickup_time,
 			status, passenger_name, passenger_phone, vehicle_type_requested,
 			created_at, rfq_number, pickup_landmark, dropoff_landmark, service_type
