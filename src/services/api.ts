@@ -157,6 +157,7 @@ export interface TripOffer {
     created_at: string;
     booking_reference?: string;
     rfq_number?: string;
+    service_type?: string;
 }
 
 export const operatorService = {

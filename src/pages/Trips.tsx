@@ -163,6 +163,9 @@ const Trips = () => {
                                     }`}>
                                     {trip.status.replace('_', ' ')}
                                 </span>
+                                <span className="bg-gray-100 text-gray-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
+                                    {trip.service_type || 'One Way'}
+                                </span>
                             </div>
 
                             <div className="grid md:grid-cols-2 gap-6">

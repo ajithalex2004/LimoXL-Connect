@@ -67,7 +67,8 @@ const Dispatch = () => {
         requested_vehicle_type: 'Sedan',
         price: '',
         pickup_landmark: '',
-        dropoff_landmark: ''
+        dropoff_landmark: '',
+        service_type: 'One Way'
     });
 
     useEffect(() => {
@@ -201,7 +202,8 @@ const Dispatch = () => {
                 requested_vehicle_type: 'Sedan',
                 price: '',
                 pickup_landmark: '',
-                dropoff_landmark: ''
+                dropoff_landmark: '',
+                service_type: 'One Way'
             });
             loadTrips();
         } catch (error) {
@@ -235,6 +237,7 @@ const Dispatch = () => {
                             <th className="px-6 py-4 font-semibold text-gray-900">Booking Ref</th>
                             <th className="px-6 py-4 font-semibold text-gray-900">Pickup Time</th>
                             <th className="px-6 py-4 font-semibold text-gray-900">Passenger</th>
+                            <th className="px-6 py-4 font-semibold text-gray-900">Request Type</th>
                             <th className="px-6 py-4 font-semibold text-gray-900">Route</th>
                             <th className="px-6 py-4 font-semibold text-gray-900">Status</th>
                             <th className="px-6 py-4 font-semibold text-gray-900 text-right">Action</th>
@@ -261,6 +264,11 @@ const Dispatch = () => {
                                         <User className="h-4 w-4 text-gray-400" />
                                         <span>{trip.passenger_name}</span>
                                     </div>
+                                </td>
+                                <td className="px-6 py-4 text-gray-600">
+                                    <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-medium uppercase tracking-wider">
+                                        {trip.service_type || 'One Way'}
+                                    </span>
                                 </td>
                                 <td className="px-6 py-4 text-gray-600">
                                     <div className="flex flex-col gap-1">
@@ -473,12 +481,27 @@ const Dispatch = () => {
             {/* Create Trip Modal */}
             {showCreateModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                    <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-                        <div className="flex justify-between items-start mb-6">
+                    <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 max-h-[90vh] flex flex-col">
+                        <div className="flex justify-between items-start mb-6 shrink-0">
                             <h2 className="text-xl font-bold">New Booking</h2>
                             <button onClick={() => setShowCreateModal(false)}><X className="h-5 w-5 text-gray-500" /></button>
                         </div>
-                        <form onSubmit={handleCreateTrip} className="space-y-4">
+                        <form onSubmit={handleCreateTrip} className="space-y-4 overflow-y-auto pr-2 custom-scrollbar">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Request Type</label>
+                                <select
+                                    className="w-full px-3 py-2 border rounded-lg bg-blue-50/50 font-semibold"
+                                    value={newTrip.service_type}
+                                    onChange={e => setNewTrip({ ...newTrip, service_type: e.target.value })}
+                                >
+                                    <option value="One Way">One Way</option>
+                                    <option value="Round Transfer">Round Transfer</option>
+                                    <option value="Airport Pickup">Airport Pickup</option>
+                                    <option value="Airport Dropoff">Airport Dropoff</option>
+                                    <option value="Hourly Package">Hourly Package</option>
+                                    <option value="Tour Package">Tour Package</option>
+                                </select>
+                            </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Passenger Name</label>
                                 <input
@@ -574,6 +597,7 @@ const Dispatch = () => {
                                     />
                                 </div>
                             </div>
+
 
                             <button type="submit" className="w-full py-3 bg-black text-white font-bold rounded-lg mt-2">
                                 Create Booking

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { TripOffer, operatorService, tripService, Trip } from '../../services/api';
-import { DollarSign, Clock, X, MapPin, User, Tag, CheckCircle } from 'lucide-react';
+import { DollarSign, Clock, X, MapPin, User, Tag, CheckCircle, Car } from 'lucide-react';
 
 const SubmittedQuotes: React.FC = () => {
     const [quotes, setQuotes] = useState<TripOffer[]>([]);
@@ -106,6 +106,7 @@ const SubmittedQuotes: React.FC = () => {
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Supplier</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                         </tr>
@@ -143,6 +144,9 @@ const SubmittedQuotes: React.FC = () => {
                                         ) : (
                                             <span className="text-gray-400 italic">No notes</span>
                                         )}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-xs font-bold text-gray-500 uppercase">
+                                        {quote.service_type || 'One Way'}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${quote.status === 'ACCEPTED' ? 'bg-green-100 text-green-800' :
@@ -232,6 +236,14 @@ const SubmittedQuotes: React.FC = () => {
 
                                             <div className="flex items-start gap-3">
                                                 <Tag className="h-5 w-5 text-gray-400 mt-0.5" />
+                                                <div>
+                                                    <p className="text-sm font-medium text-gray-900">Request Type</p>
+                                                    <p className="text-sm text-gray-600 font-bold uppercase">{selectedTrip.service_type || 'One Way'}</p>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-start gap-3">
+                                                <Car className="h-5 w-5 text-gray-400 mt-0.5" />
                                                 <div>
                                                     <p className="text-sm font-medium text-gray-900">Vehicle Requested</p>
                                                     <p className="text-sm text-gray-600">
