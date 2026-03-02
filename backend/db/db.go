@@ -102,7 +102,35 @@ func SeedAdmin() {
 		}
 	}
 
-	log.Printf("SeedAdmin: admin user '%s' is ready (company_id=%s)", adminEmail, companyID)
+	// 3. Upsert the admin user
+	_, err = DB.Exec(`
+		INSERT INTO users (company_id, role, email, password_hash, name)
+		VALUES ($1, 'ADMIN', $2, $3, 'Admin')
+		ON CONFLICT (email) DO UPDATE
+		SET password_hash = EXCLUDED.password_hash,
+		    company_id    = EXCLUDED.company_id
+	`, companyID, adminEmail, string(hashed))
+	if err != nil {
+		log.Printf("SeedAdmin: failed to upsert admin user: %v", err)
+	} else {
+		log.Printf("SeedAdmin: admin user '%s' is ready", adminEmail)
+	}
+
+	// 4. Upsert the SuperAdmin user
+	superEmail := "superadmin@limoxlink.com"
+	_, err = DB.Exec(`
+		INSERT INTO users (company_id, role, email, password_hash, name, is_super_admin)
+		VALUES (NULL, 'SUPER_ADMIN', $1, $2, 'Super Admin', true)
+		ON CONFLICT (email) DO UPDATE
+		SET password_hash = EXCLUDED.password_hash,
+		    role = 'SUPER_ADMIN',
+		    is_super_admin = true
+	`, superEmail, string(hashed))
+	if err != nil {
+		log.Printf("SeedAdmin: failed to upsert superadmin user: %v", err)
+	} else {
+		log.Printf("SeedAdmin: superadmin user '%s' is ready", superEmail)
+	}
 
 	// 4. Upsert Tenant entry for the operator
 	var tenantID string
