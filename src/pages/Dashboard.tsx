@@ -177,7 +177,7 @@ const Dashboard = () => {
         <div className="space-y-6">
             <div>
                 <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-                <p className="text-gray-500">Welcome back, {user?.name} <span className="text-xs font-mono ml-2 opacity-50">v1.0.5-debug</span></p>
+                <p className="text-gray-500">Welcome back, {user?.name} <span className="text-xs font-mono ml-2 opacity-50">v1.0.6-live</span></p>
             </div>
 
             {isSuperAdmin && (
@@ -437,7 +437,7 @@ const Dashboard = () => {
             )}
             {/* Version Marker For Build Verification */}
             <div className="pt-12 pb-4 text-center">
-                <p className="text-[10px] text-gray-300 font-mono tracking-widest uppercase">LimoXL Orchestrator v1.0.5-debug</p>
+                <p className="text-[10px] text-gray-300 font-mono tracking-widest uppercase">LimoXL Orchestrator v1.0.6-live</p>
             </div>
         </div>
     );
