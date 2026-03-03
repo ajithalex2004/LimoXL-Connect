@@ -4,7 +4,7 @@ import {
     Plus, Car, Search, Edit2, Trash2,
     X, Info, Paperclip, CheckCircle2,
     Calendar, Shield, MapPin, Hash, Palette,
-    Download, FileText, Settings2
+    Download, FileText
 } from 'lucide-react';
 
 const Vehicles = () => {
@@ -238,8 +238,8 @@ const Vehicles = () => {
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full uppercase border ${vehicle.status === 'IDLE' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
-                                                    vehicle.status === 'ON_TRIP' ? 'bg-blue-50 text-blue-700 border-blue-100' :
-                                                        'bg-gray-50 text-gray-600 border-gray-100'
+                                                vehicle.status === 'ON_TRIP' ? 'bg-blue-50 text-blue-700 border-blue-100' :
+                                                    'bg-gray-50 text-gray-600 border-gray-100'
                                                 }`}>
                                                 {vehicle.status}
                                             </span>

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { operatorService, type NUIMaster } from '../../services/api';
 import {
     Plus, Search, Edit2, Trash2, X,
-    Settings2, Layers, Tag as TagIcon, Box
+    Settings2, Layers, Tag as TagIcon, Box, User
 } from 'lucide-react';
 
 const NUIMasters = () => {
@@ -127,8 +127,8 @@ const NUIMasters = () => {
                         key={cat.id}
                         onClick={() => setActiveCategory(cat.id as any)}
                         className={`p-4 rounded-xl border text-left transition-all ${activeCategory === cat.id
-                                ? 'bg-emerald-50 border-emerald-200 shadow-sm ring-1 ring-emerald-200'
-                                : 'bg-white border-gray-100 hover:border-gray-300'
+                            ? 'bg-emerald-50 border-emerald-200 shadow-sm ring-1 ring-emerald-200'
+                            : 'bg-white border-gray-100 hover:border-gray-300'
                             }`}
                     >
                         <div className="flex items-center gap-3 mb-2">
