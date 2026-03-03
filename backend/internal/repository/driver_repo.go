@@ -9,6 +9,14 @@ import (
 	"github.com/google/uuid"
 )
 
+type PostgresDriverRepo struct {
+	DB *sql.DB
+}
+
+func NewPostgresDriverRepo(db *sql.DB) *PostgresDriverRepo {
+	return &PostgresDriverRepo{DB: db}
+}
+
 func (r *PostgresDriverRepo) Create(ctx context.Context, d *models.Driver) error {
 	query := `
 		INSERT INTO drivers (

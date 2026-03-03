@@ -9,11 +9,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type FleetAttachmentRepository interface {
-	Create(ctx context.Context, att *models.FleetAttachment) error
-	ListByEntity(ctx context.Context, entityID uuid.UUID, entityType string) ([]models.FleetAttachment, error)
-	Delete(ctx context.Context, id uuid.UUID) error
-}
 
 type PostgresFleetAttachmentRepo struct {
 	DB *sql.DB

@@ -159,10 +159,9 @@ type FleetAttachment struct {
 	EntityID   uuid.UUID `db:"entity_id" json:"entity_id"`
 	EntityType string    `db:"entity_type" json:"entity_type"` // VEHICLE, DRIVER
 	FileName   string    `db:"file_name" json:"file_name"`
-	FilePath   string    `db:"file_path" json:"file_path"`
+	FileURL    string    `db:"file_url" json:"file_url"`
 	FileType   string    `db:"file_type" json:"file_type"`
-	FileSize   int64     `db:"file_size" json:"file_size"`
-	UploadedAt time.Time `db:"uploaded_at" json:"uploaded_at"`
+	CreatedAt  time.Time `db:"created_at" json:"created_at"`
 }
 
 type Trip struct {
