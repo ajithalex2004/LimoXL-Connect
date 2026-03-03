@@ -26,5 +26,21 @@ type VehicleRepository interface {
 	Create(ctx context.Context, vehicle *models.Vehicle) error
 	GetByID(ctx context.Context, id uuid.UUID) (*models.Vehicle, error)
 	ListByCompany(ctx context.Context, companyID uuid.UUID) ([]models.Vehicle, error)
+	Update(ctx context.Context, vehicle *models.Vehicle) error
 	UpdateStatus(ctx context.Context, id uuid.UUID, status models.VehicleStatus) error
+	Delete(ctx context.Context, id uuid.UUID) error
+}
+
+type DriverRepository interface {
+	Create(ctx context.Context, driver *models.Driver) error
+	GetByID(ctx context.Context, id uuid.UUID) (*models.Driver, error)
+	ListByCompany(ctx context.Context, companyID uuid.UUID) ([]models.Driver, error)
+	Update(ctx context.Context, driver *models.Driver) error
+	Delete(ctx context.Context, id uuid.UUID) error
+}
+
+type FleetAttachmentRepository interface {
+	Create(ctx context.Context, att *models.FleetAttachment) error
+	ListByEntity(ctx context.Context, entityID uuid.UUID, entityType string) ([]models.FleetAttachment, error)
+	Delete(ctx context.Context, id uuid.UUID) error
 }

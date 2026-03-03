@@ -11,6 +11,8 @@ import OutsourceMaster from './pages/operator/OutsourceMaster';
 import SubmittedQuotes from './pages/operator/SubmittedQuotes';
 import TeamManagement from './pages/operator/TeamManagement';
 import Dispatch from './pages/operator/Dispatch';
+import OperatorVehicles from './pages/operator/Vehicles';
+import OperatorDrivers from './pages/operator/Drivers';
 import SecureDriverLink from './pages/SecureDriverLink';
 import TenantDashboard from './pages/superadmin/TenantDashboard';
 import TenantDetail from './pages/superadmin/TenantDetail';
@@ -32,6 +34,8 @@ function App() {
                     <Route path="dispatch" element={<Dispatch />} />
                     <Route path="quotes" element={<SubmittedQuotes />} />
                     <Route path="team" element={<TeamManagement />} />
+                    <Route path="vehicles" element={<OperatorVehicles />} />
+                    <Route path="drivers" element={<OperatorDrivers />} />
                     
                     {/* SuperAdmin Routes */}
                     <Route path="superadmin/dashboard" element={<TenantDashboard />} />

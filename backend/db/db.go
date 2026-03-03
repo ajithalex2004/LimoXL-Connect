@@ -56,6 +56,7 @@ func RunMigrations() error {
 		"db/migrations/02_outsource_companies.sql",
 		"db/migrations/03_multi_tenancy.sql",
 		"db/migrations/04_rfq_support.sql",
+		"db/migrations/05_detailed_fleet.sql",
 	}
 	for _, path := range migrations {
 		data, err := os.ReadFile(path)

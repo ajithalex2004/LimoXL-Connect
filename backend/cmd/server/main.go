@@ -75,6 +75,7 @@ func main() {
 	tripRepo := repository.NewPostgresTripRepo(db.DB)
 	outsourceCompanyRepo := repository.NewOutsourceCompanyRepo(db.DB)
 	tenantRepo := repository.NewTenantRepository(db.DB)
+	attachmentRepo := repository.NewPostgresFleetAttachmentRepo(db.DB)
 
 	// Initialize Handlers
 	companyHandler := api.NewCompanyHandler(companyRepo)
@@ -83,7 +84,7 @@ func main() {
 	tripHandler := api.NewTripHandler(tripRepo)
 	authHandler := api.NewAuthHandler(userRepo, tenantRepo)
 	operatorHandler := api.NewOperatorHandler(companyRepo, userRepo, tripRepo, outsourceCompanyRepo)
-	fleetHandler := api.NewFleetHandler(vehicleRepo, driverRepo)
+	fleetHandler := api.NewFleetHandler(vehicleRepo, driverRepo, attachmentRepo)
 	superAdminHandler := api.NewSuperAdminHandler(tenantRepo, userRepo)
 
 	r := chi.NewRouter()
@@ -193,8 +194,17 @@ func main() {
 				r.Use(middleware.FeatureGate(tenantRepo, models.FeatureFleetManagement))
 				r.Get("/vehicles", fleetHandler.ListVehicles)
 				r.Post("/vehicles", fleetHandler.CreateVehicle)
+				r.Put("/vehicles/{id}", fleetHandler.UpdateVehicle)
+				r.Delete("/vehicles/{id}", fleetHandler.DeleteVehicle)
 				r.Get("/drivers", fleetHandler.ListDrivers)
 				r.Post("/drivers", fleetHandler.CreateDriver)
+				r.Put("/drivers/{id}", fleetHandler.UpdateDriver)
+				r.Delete("/drivers/{id}", fleetHandler.DeleteDriver)
+
+				// Attachments
+				r.Get("/attachments", fleetHandler.ListAttachments)
+				r.Post("/attachments", fleetHandler.CreateAttachment)
+				r.Delete("/attachments/{id}", fleetHandler.DeleteAttachment)
 			})
 
 			// Team Features

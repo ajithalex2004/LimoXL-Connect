@@ -52,8 +52,10 @@ const Layout = () => {
         if (role === 'ADMIN' || role === 'OPS' || role === 'DISPATCHER') {
             const items = [
                 { name: 'Dashboard', path: '/', icon: LayoutDashboard },
-                { name: 'Trips', path: '/dispatch', icon: LayoutDashboard }, // Path remains same for now to avoid refactoring everything
-                { name: 'Outsource Companies', path: '/outsource-master', icon: Building }, // New route
+                { name: 'Trips', path: '/dispatch', icon: LayoutDashboard }, 
+                { name: 'Vehicle Master', path: '/vehicles', icon: Car },
+                { name: 'Driver Master', path: '/drivers', icon: User },
+                { name: 'Outsource Companies', path: '/outsource-master', icon: Building },
                 { name: 'Submitted Quotes', path: '/quotes', icon: FileText },
             ];
 

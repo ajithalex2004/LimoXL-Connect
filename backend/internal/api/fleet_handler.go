@@ -13,14 +13,16 @@ import (
 )
 
 type FleetHandler struct {
-	VehicleRepo repository.VehicleRepository
-	DriverRepo  repository.DriverRepository
+	VehicleRepo    repository.VehicleRepository
+	DriverRepo     repository.DriverRepository
+	AttachmentRepo repository.FleetAttachmentRepository
 }
 
-func NewFleetHandler(vRepo repository.VehicleRepository, dRepo repository.DriverRepository) *FleetHandler {
+func NewFleetHandler(vRepo repository.VehicleRepository, dRepo repository.DriverRepository, aRepo repository.FleetAttachmentRepository) *FleetHandler {
 	return &FleetHandler{
-		VehicleRepo: vRepo,
-		DriverRepo:  dRepo,
+		VehicleRepo:    vRepo,
+		DriverRepo:     dRepo,
+		AttachmentRepo: aRepo,
 	}
 }
 
@@ -115,6 +117,59 @@ func (h *FleetHandler) CreateVehicle(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(req)
 }
 
+func (h *FleetHandler) UpdateVehicle(w http.ResponseWriter, r *http.Request) {
+	companyID, ok := getCompanyIDFromClaims(r)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var v models.Vehicle
+	if err := json.NewDecoder(r.Body).Decode(&v); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	idStr := chi.URLParam(r, "id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		http.Error(w, "Invalid vehicle ID", http.StatusBadRequest)
+		return
+	}
+	v.ID = id
+	v.CompanyID = companyID
+
+	if err := h.VehicleRepo.Update(r.Context(), &v); err != nil {
+		http.Error(w, "Error updating vehicle: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(v)
+}
+
+func (h *FleetHandler) DeleteVehicle(w http.ResponseWriter, r *http.Request) {
+	_, ok := getCompanyIDFromClaims(r)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	idStr := chi.URLParam(r, "id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		http.Error(w, "Invalid vehicle ID", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.VehicleRepo.Delete(r.Context(), id); err != nil {
+		http.Error(w, "Error deleting vehicle", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (h *FleetHandler) ListDrivers(w http.ResponseWriter, r *http.Request) {
 	companyID, ok := getCompanyIDFromClaims(r)
 	if !ok {
@@ -158,4 +213,114 @@ func (h *FleetHandler) CreateDriver(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(req)
+}
+
+func (h *FleetHandler) UpdateDriver(w http.ResponseWriter, r *http.Request) {
+	companyID, ok := getCompanyIDFromClaims(r)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var d models.Driver
+	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	idStr := chi.URLParam(r, "id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		http.Error(w, "Invalid driver ID", http.StatusBadRequest)
+		return
+	}
+	d.ID = id
+	d.CompanyID = companyID
+
+	if err := h.DriverRepo.Update(r.Context(), &d); err != nil {
+		http.Error(w, "Error updating driver: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(d)
+}
+
+func (h *FleetHandler) DeleteDriver(w http.ResponseWriter, r *http.Request) {
+	_, ok := getCompanyIDFromClaims(r)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	idStr := chi.URLParam(r, "id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		http.Error(w, "Invalid driver ID", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.DriverRepo.Delete(r.Context(), id); err != nil {
+		http.Error(w, "Error deleting driver", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *FleetHandler) CreateAttachment(w http.ResponseWriter, r *http.Request) {
+	var att models.FleetAttachment
+	if err := json.NewDecoder(r.Body).Decode(&att); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.AttachmentRepo.Create(r.Context(), &att); err != nil {
+		http.Error(w, "Error creating attachment", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(att)
+}
+
+func (h *FleetHandler) ListAttachments(w http.ResponseWriter, r *http.Request) {
+	entityIDStr := r.URL.Query().Get("entity_id")
+	entityType := r.URL.Query().Get("entity_type")
+
+	if entityIDStr == "" || entityType == "" {
+		http.Error(w, "entity_id and entity_type are required", http.StatusBadRequest)
+		return
+	}
+
+	entityID, err := uuid.Parse(entityIDStr)
+	if err != nil {
+		http.Error(w, "Invalid entity ID", http.StatusBadRequest)
+		return
+	}
+
+	attachments, err := h.AttachmentRepo.ListByEntity(r.Context(), entityID, entityType)
+	if err != nil {
+		http.Error(w, "Error listing attachments", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(attachments)
+}
+
+func (h *FleetHandler) DeleteAttachment(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		http.Error(w, "Invalid attachment ID", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.AttachmentRepo.Delete(r.Context(), id); err != nil {
+		http.Error(w, "Error deleting attachment", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

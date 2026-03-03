@@ -103,36 +103,66 @@ type User struct {
 }
 
 type Vehicle struct {
-	ID           uuid.UUID     `db:"id" json:"id"`
-	CompanyID    uuid.UUID     `db:"company_id" json:"company_id"`
-	PlateNumber  string        `db:"license_plate" json:"plate_number"` // Remote DB uses license_plate
-	Type         string        `db:"type" json:"type"`                  // Deprecated in favor of Group/Model but kept for compat
-	VehicleClass string        `db:"vehicle_class" json:"vehicle_class"`
-	VehicleGroup string        `db:"vehicle_group" json:"vehicle_group"`
-	Model        string        `db:"model" json:"model"`
-	Capacity     int           `db:"capacity" json:"capacity"`
-	Status       VehicleStatus `db:"status" json:"status"`
-	// Basic Lat/Lng for now. PostGIS interaction will happen in Repo.
-	CurrentLat      *float64   `db:"current_lat" json:"lat,omitempty"` // Mapped via query usually
-	CurrentLng      *float64   `db:"current_lng" json:"lng,omitempty"`
-	PermitExpiry    *time.Time `db:"permit_expiry" json:"permit_expiry"`
-	InsuranceExpiry *time.Time `db:"insurance_expiry" json:"insurance_expiry"`
-	LastHeartbeat   *time.Time `db:"last_heartbeat" json:"last_heartbeat"`
-	CreatedAt       time.Time  `db:"created_at" json:"created_at"`
-	UpdatedAt       time.Time  `db:"updated_at" json:"updated_at"`
+	ID                 uuid.UUID     `db:"id" json:"id"`
+	CompanyID          uuid.UUID     `db:"company_id" json:"company_id"`
+	PlateNumber        string        `db:"license_plate" json:"plate_number"`
+	Type               string        `db:"type" json:"type"`
+	VehicleClass       string        `db:"vehicle_class" json:"vehicle_class"`
+	VehicleGroup       string        `db:"vehicle_group" json:"vehicle_group"`
+	Model              string        `db:"model" json:"model"`
+	Capacity           int           `db:"capacity" json:"capacity"`
+	Status             VehicleStatus `db:"status" json:"status"`
+	CurrentLat         *float64      `db:"current_lat" json:"lat,omitempty"`
+	CurrentLng         *float64      `db:"current_lng" json:"lng,omitempty"`
+	PermitExpiry       *time.Time    `db:"permit_expiry" json:"permit_expiry"`
+	InsuranceExpiry    *time.Time    `db:"insurance_expiry" json:"insurance_expiry"`
+	LastHeartbeat      *time.Time    `db:"last_heartbeat" json:"last_heartbeat"`
+	CreatedAt          time.Time     `db:"created_at" json:"created_at"`
+	UpdatedAt          time.Time     `db:"updated_at" json:"updated_at"`
+	ChassisNo          string        `db:"chassis_no" json:"chassis_no"`
+	VIN                string        `db:"vin" json:"vin"`
+	YearOfManufacture  int           `db:"year_of_manufacture" json:"year_of_manufacture"`
+	Color              string        `db:"color" json:"color"`
+	RegistrationNumber string        `db:"registration_number" json:"registration_number"`
+	PlateCode          string        `db:"plate_code" json:"plate_code"`
+	PlateCategory      string        `db:"plate_category" json:"plate_category"`
+	Emirate            string        `db:"emirate" json:"emirate"`
+	Hierarchy          string        `db:"hierarchy" json:"hierarchy"`
+	VehicleUsage       string        `db:"vehicle_usage" json:"vehicle_usage"`
 }
 
 type Driver struct {
-	ID               uuid.UUID     `db:"id" json:"id"`
-	CompanyID        uuid.UUID     `db:"company_id" json:"company_id"`
-	Name             string        `db:"name" json:"name"`
-	Phone            string        `db:"phone" json:"phone,omitempty"`
-	LicenseNumber    string        `db:"license_number" json:"license_number,omitempty"`
-	CurrentVehicleID uuid.NullUUID `db:"current_vehicle_id" json:"current_vehicle_id,omitempty"`
-	LicenseExpiry    *time.Time    `db:"license_expiry" json:"license_expiry"`
-	ITCPermitExpiry  *time.Time    `db:"itc_permit_expiry" json:"itc_permit_expiry"`
-	VisaExpiry       *time.Time    `db:"visa_expiry" json:"visa_expiry"`
-	CreatedAt        time.Time     `db:"created_at" json:"created_at"`
+	ID                    uuid.UUID     `db:"id" json:"id"`
+	CompanyID             uuid.UUID     `db:"company_id" json:"company_id"`
+	Name                  string        `db:"name" json:"name"`
+	Phone                 string        `db:"phone" json:"phone,omitempty"`
+	LicenseNumber         string        `db:"license_number" json:"license_number,omitempty"`
+	CurrentVehicleID      uuid.NullUUID `db:"current_vehicle_id" json:"current_vehicle_id,omitempty"`
+	LicenseExpiry         *time.Time    `db:"license_expiry" json:"license_expiry"`
+	ITCPermitExpiry       *time.Time    `db:"itc_permit_expiry" json:"itc_permit_expiry"`
+	VisaExpiry            *time.Time    `db:"visa_expiry" json:"visa_expiry"`
+	CreatedAt             time.Time     `db:"created_at" json:"created_at"`
+	FirstName             string        `db:"first_name" json:"first_name"`
+	LastName              string        `db:"last_name" json:"last_name"`
+	DateOfBirth           *time.Time    `db:"date_of_birth" json:"date_of_birth"`
+	Nationality           string        `db:"nationality" json:"nationality"`
+	EmiratesID            string        `db:"emirates_id" json:"emirates_id"`
+	DateOfJoin            *time.Time    `db:"date_of_join" json:"date_of_join"`
+	DallasID              string        `db:"dallas_id" json:"dallas_id"`
+	CommunicationLanguage string        `db:"communication_language" json:"communication_language"`
+	Hierarchy             string        `db:"hierarchy" json:"hierarchy"`
+	DriverType            string        `db:"driver_type" json:"driver_type"`
+}
+
+type FleetAttachment struct {
+	ID         uuid.UUID `db:"id" json:"id"`
+	EntityID   uuid.UUID `db:"entity_id" json:"entity_id"`
+	EntityType string    `db:"entity_type" json:"entity_type"` // VEHICLE, DRIVER
+	FileName   string    `db:"file_name" json:"file_name"`
+	FilePath   string    `db:"file_path" json:"file_path"`
+	FileType   string    `db:"file_type" json:"file_type"`
+	FileSize   int64     `db:"file_size" json:"file_size"`
+	UploadedAt time.Time `db:"uploaded_at" json:"uploaded_at"`
 }
 
 type Trip struct {

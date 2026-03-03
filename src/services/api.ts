@@ -132,10 +132,23 @@ export interface Vehicle {
     status: string;
     permit_expiry?: string;
     insurance_expiry?: string;
+    chassis_no?: string;
+    vin?: string;
+    year_of_manufacture?: number;
+    color?: string;
+    registration_number?: string;
+    plate_code?: string;
+    plate_category?: string;
+    emirate?: string;
+    hierarchy?: string;
+    vehicle_usage?: string;
+    created_at?: string;
+    updated_at?: string;
 }
 
 export interface Driver {
     id: string;
+    company_id?: string;
     name: string;
     phone: string;
     license_number: string;
@@ -143,6 +156,27 @@ export interface Driver {
     license_expiry?: string;
     itc_permit_expiry?: string;
     visa_expiry?: string;
+    first_name?: string;
+    last_name?: string;
+    date_of_birth?: string;
+    nationality?: string;
+    emirates_id?: string;
+    date_of_join?: string;
+    dallas_id?: string;
+    communication_language?: string;
+    hierarchy?: string;
+    driver_type?: string;
+    created_at?: string;
+}
+
+export interface FleetAttachment {
+    id: string;
+    entity_id: string;
+    entity_type: string;
+    file_name: string;
+    file_url: string;
+    file_type: string;
+    created_at?: string;
 }
 
 export interface TripOffer {
@@ -213,13 +247,60 @@ export const operatorService = {
         return response.data;
     },
 
-    listVehicles: async () => {
-        const response = await api.get('operator/vehicles');
+    listVehicles: async (): Promise<Vehicle[]> => {
+        const response = await api.get<Vehicle[]>('operator/vehicles');
         return response.data;
     },
 
-    listDrivers: async () => {
-        const response = await api.get('operator/drivers');
+    createVehicle: async (data: Partial<Vehicle>) => {
+        const response = await api.post('operator/vehicles', data);
+        return response.data;
+    },
+
+    updateVehicle: async (id: string, data: Partial<Vehicle>) => {
+        const response = await api.put(`operator/vehicles/${id}`, data);
+        return response.data;
+    },
+
+    deleteVehicle: async (id: string) => {
+        const response = await api.delete(`operator/vehicles/${id}`);
+        return response.data;
+    },
+
+    listDrivers: async (): Promise<Driver[]> => {
+        const response = await api.get<Driver[]>('operator/drivers');
+        return response.data;
+    },
+
+    createDriver: async (data: Partial<Driver>) => {
+        const response = await api.post('operator/drivers', data);
+        return response.data;
+    },
+
+    updateDriver: async (id: string, data: Partial<Driver>) => {
+        const response = await api.put(`operator/drivers/${id}`, data);
+        return response.data;
+    },
+
+    deleteDriver: async (id: string) => {
+        const response = await api.delete(`operator/drivers/${id}`);
+        return response.data;
+    },
+
+    listAttachments: async (entityID: string, entityType: string): Promise<FleetAttachment[]> => {
+        const response = await api.get<FleetAttachment[]>('operator/attachments', {
+            params: { entity_id: entityID, entity_type: entityType }
+        });
+        return response.data;
+    },
+
+    createAttachment: async (data: Partial<FleetAttachment>) => {
+        const response = await api.post('operator/attachments', data);
+        return response.data;
+    },
+
+    deleteAttachment: async (id: string) => {
+        const response = await api.delete(`operator/attachments/${id}`);
         return response.data;
     },
 
