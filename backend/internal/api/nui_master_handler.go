@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"limoxlink-backend/internal/middleware"
 	"limoxlink-backend/internal/models"
 	"limoxlink-backend/internal/repository"
 	"net/http"
@@ -16,7 +15,7 @@ type NUIMasterHandler struct {
 }
 
 func (h *NUIMasterHandler) Create(w http.ResponseWriter, r *http.Request) {
-	claims, ok := r.Context().Value(middleware.UserContextKey).(*middleware.Claims)
+	companyID, ok := getCompanyIDFromClaims(r)
 	if !ok {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
@@ -28,28 +27,33 @@ func (h *NUIMasterHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	master.CompanyID = claims.CompanyID
+	master.CompanyID = companyID
 	if err := h.MasterRepo.Create(r.Context(), &master); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(master)
 }
 
 func (h *NUIMasterHandler) List(w http.ResponseWriter, r *http.Request) {
-	claims, ok := r.Context().Value(middleware.UserContextKey).(*middleware.Claims)
+	companyID, ok := getCompanyIDFromClaims(r)
 	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode([]interface{}{})
 		return
 	}
 
 	category := r.URL.Query().Get("category")
-	masters, err := h.MasterRepo.ListByCompany(r.Context(), claims.CompanyID, category)
+	masters, err := h.MasterRepo.ListByCompany(r.Context(), companyID, category)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+	if masters == nil {
+		masters = []models.NUIMaster{}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -57,7 +61,7 @@ func (h *NUIMasterHandler) List(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *NUIMasterHandler) Update(w http.ResponseWriter, r *http.Request) {
-	claims, ok := r.Context().Value(middleware.UserContextKey).(*middleware.Claims)
+	companyID, ok := getCompanyIDFromClaims(r)
 	if !ok {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
@@ -77,16 +81,23 @@ func (h *NUIMasterHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	master.ID = id
-	master.CompanyID = claims.CompanyID
+	master.CompanyID = companyID
 	if err := h.MasterRepo.Update(r.Context(), &master); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(master)
 }
 
 func (h *NUIMasterHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	_, ok := getCompanyIDFromClaims(r)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	idStr := chi.URLParam(r, "id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
