@@ -57,8 +57,8 @@ const Drivers = () => {
                 operatorService.listMasters('HIERARCHY')
             ]);
             console.log("DEBUG: Fetched Masters for Drivers:", {
-                driverTypes: types.length,
-                hierarchies: hierarchyList.length
+                driverTypes: types?.length || 0,
+                hierarchies: hierarchyList?.length || 0
             });
             setDriverTypes(types?.filter(m => m.is_active) || []);
             setHierarchies(hierarchyList?.filter(m => m.is_active) || []);

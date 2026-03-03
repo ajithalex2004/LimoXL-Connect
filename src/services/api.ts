@@ -336,7 +336,7 @@ export const operatorService = {
     // NUI Masters
     listMasters: async (category?: string): Promise<NUIMaster[]> => {
         const response = await api.get<NUIMaster[]>('operator/masters', { params: { category } });
-        return response.data;
+        return response.data || [];
     },
 
     createMaster: async (data: Partial<NUIMaster>) => {

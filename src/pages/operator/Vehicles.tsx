@@ -63,10 +63,10 @@ const Vehicles = () => {
                 operatorService.listMasters('HIERARCHY')
             ]);
             console.log("DEBUG: Fetched Masters:", {
-                types: types.length,
-                classes: classes.length,
-                usages: usages.length,
-                hierarchies: hierarchyList.length
+                types: types?.length || 0,
+                classes: classes?.length || 0,
+                usages: usages?.length || 0,
+                hierarchies: hierarchyList?.length || 0
             });
             setVehicleTypes(types?.filter(m => m.is_active) || []);
             setVehicleClasses(classes?.filter(m => m.is_active) || []);
