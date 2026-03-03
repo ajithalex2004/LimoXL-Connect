@@ -67,6 +67,7 @@ const NUIMasters = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        console.log("DEBUG: Submitting NUI Master:", { ...formData, category: activeCategory });
         try {
             if (editingMaster) {
                 await operatorService.updateMaster(editingMaster.id, formData);

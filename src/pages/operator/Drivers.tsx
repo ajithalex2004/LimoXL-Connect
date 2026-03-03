@@ -51,12 +51,17 @@ const Drivers = () => {
 
     const loadMasters = async () => {
         try {
+            console.log("DEBUG: Loading NUI Masters for Drivers...");
             const [types, hierarchyList] = await Promise.all([
                 operatorService.listMasters('DRIVER_TYPE'),
                 operatorService.listMasters('HIERARCHY')
             ]);
-            setDriverTypes(types.filter(m => m.is_active));
-            setHierarchies(hierarchyList.filter(m => m.is_active));
+            console.log("DEBUG: Fetched Masters for Drivers:", {
+                driverTypes: types.length,
+                hierarchies: hierarchyList.length
+            });
+            setDriverTypes(types?.filter(m => m.is_active) || []);
+            setHierarchies(hierarchyList?.filter(m => m.is_active) || []);
         } catch (error) {
             console.error("Failed to load masters", error);
         }
@@ -83,6 +88,7 @@ const Drivers = () => {
     };
 
     const handleOpenAdd = () => {
+        loadMasters(); // Reload to get latest data
         setEditingDriver(null);
         setFormData({
             name: '',

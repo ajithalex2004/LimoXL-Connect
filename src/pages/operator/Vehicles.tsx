@@ -55,16 +55,23 @@ const Vehicles = () => {
 
     const loadMasters = async () => {
         try {
+            console.log("DEBUG: Loading NUI Masters for Vehicles...");
             const [types, classes, usages, hierarchyList] = await Promise.all([
                 operatorService.listMasters('TYPE'),
                 operatorService.listMasters('CLASS'),
                 operatorService.listMasters('USAGE'),
                 operatorService.listMasters('HIERARCHY')
             ]);
-            setVehicleTypes(types.filter(m => m.is_active));
-            setVehicleClasses(classes.filter(m => m.is_active));
-            setVehicleUsages(usages.filter(m => m.is_active));
-            setHierarchies(hierarchyList.filter(m => m.is_active));
+            console.log("DEBUG: Fetched Masters:", {
+                types: types.length,
+                classes: classes.length,
+                usages: usages.length,
+                hierarchies: hierarchyList.length
+            });
+            setVehicleTypes(types?.filter(m => m.is_active) || []);
+            setVehicleClasses(classes?.filter(m => m.is_active) || []);
+            setVehicleUsages(usages?.filter(m => m.is_active) || []);
+            setHierarchies(hierarchyList?.filter(m => m.is_active) || []);
         } catch (error) {
             console.error("Failed to load masters", error);
         }
@@ -83,6 +90,7 @@ const Vehicles = () => {
     };
 
     const handleOpenAdd = () => {
+        loadMasters(); // Reload to get latest data
         setEditingVehicle(null);
         setFormData({
             plate_number: '',
