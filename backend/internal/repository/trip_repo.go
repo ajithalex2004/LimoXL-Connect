@@ -351,9 +351,9 @@ func (r *PostgresTripRepo) ListRFQHistory(ctx context.Context, partnerID uuid.UU
 func (r *PostgresTripRepo) ListPartnerTrips(ctx context.Context, partnerID uuid.UUID) ([]models.Trip, error) {
 	query := `
 		SELECT
-			id, reference_no, pickup_zone, dropoff_zone, pickup_time,
+			id, reference_no, pickup_zone, dropoff_zone, pickup_time::timestamp,
 			status, passenger_name, vehicle_type_requested, driver_link_token,
-			created_at, rfq_number, pickup_landmark, dropoff_landmark, service_type
+			created_at::timestamp, rfq_number, pickup_landmark, dropoff_landmark, service_type
 		FROM trips
 		WHERE fulfillment_company_id = $1
 		ORDER BY created_at DESC
