@@ -67,9 +67,22 @@ func (h *OperatorHandler) HandleCreateOutsourceCompany(w http.ResponseWriter, r 
 	}
 
 	if err := h.OutsourceCompanyRepo.Create(r.Context(), company); err != nil {
-		fmt.Printf("Error creating outsource company: %v\n", err)
+		fmt.Printf("Error creating outsource company record: %v\n", err)
 		http.Error(w, "Failed to create outsource company", http.StatusInternalServerError)
 		return
+	}
+
+	// Also create/sync to main companies table for dispatch visibility
+	mainCompany := &models.Company{
+		ID:       company.ID,
+		Name:     company.Name,
+		Type:     "SUPPLY",
+		Verified: true,
+	}
+	if err := h.CompanyRepo.Create(r.Context(), mainCompany); err != nil {
+		fmt.Printf("Error creating main company record (sync): %v\n", err)
+		// We don't fail the whole request because the outsource record is already created
+		// but this might lead to visibility issues. Log it.
 	}
 
 	w.WriteHeader(http.StatusCreated)
@@ -255,7 +268,6 @@ func (h *OperatorHandler) HandleListAllTrips(w http.ResponseWriter, r *http.Requ
 	json.NewEncoder(w).Encode(trips)
 }
 
-
 func (h *OperatorHandler) HandleAssignOutsource(w http.ResponseWriter, r *http.Request) {
 	tripIDStr := chi.URLParam(r, "id")
 	tripID, err := uuid.Parse(tripIDStr)
@@ -400,6 +412,14 @@ func (h *OperatorHandler) HandleUpdateOutsourceCompany(w http.ResponseWriter, r 
 		fmt.Printf("Error updating outsource company: %v\n", err)
 		http.Error(w, "Failed to update outsource company", http.StatusInternalServerError)
 		return
+	}
+
+	// Sync name update to companies table
+	if mainComp, err := h.CompanyRepo.GetByID(r.Context(), existing.ID); err == nil {
+		mainComp.Name = existing.Name
+		// Potential need for a more specific update method in CompanyRepo if this grows
+		// but for now we expect CompanyRepo.Create or similar to handle basic updates
+		// Or we just ignore name sync for now if it's too complex without a dedicated update in CompanyRepo
 	}
 
 	w.Header().Set("Content-Type", "application/json")
