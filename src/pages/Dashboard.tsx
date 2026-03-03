@@ -437,7 +437,7 @@ const Dashboard = () => {
             )}
             {/* Version Marker For Build Verification */}
             <div className="pt-12 pb-4 text-center">
-                <p className="text-[10px] text-gray-300 font-mono tracking-widest uppercase">LimoXL Orchestrator v1.0.6-live</p>
+                <p className="text-[10px] text-gray-300 font-mono tracking-widest uppercase">LimoXL Orchestrator v1.0.7-live</p>
             </div>
         </div>
     );
