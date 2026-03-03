@@ -179,6 +179,17 @@ export interface FleetAttachment {
     created_at?: string;
 }
 
+export interface NUIMaster {
+    id: string;
+    company_id: string;
+    category: 'TYPE' | 'CLASS' | 'USAGE' | 'DRIVER_TYPE' | 'HIERARCHY';
+    name: string;
+    description: string;
+    is_active: boolean;
+    created_at?: string;
+    updated_at?: string;
+}
+
 export interface TripOffer {
     id: string;
     trip_id: string;
@@ -319,6 +330,27 @@ export const operatorService = {
 
     createTeamMember: async (data: any) => {
         const response = await api.post('operator/users', data);
+        return response.data;
+    },
+
+    // NUI Masters
+    listMasters: async (category?: string): Promise<NUIMaster[]> => {
+        const response = await api.get<NUIMaster[]>('operator/masters', { params: { category } });
+        return response.data;
+    },
+
+    createMaster: async (data: Partial<NUIMaster>) => {
+        const response = await api.post('operator/masters', data);
+        return response.data;
+    },
+
+    updateMaster: async (id: string, data: Partial<NUIMaster>) => {
+        const response = await api.put(`operator/masters/${id}`, data);
+        return response.data;
+    },
+
+    deleteMaster: async (id: string) => {
+        const response = await api.delete(`operator/masters/${id}`);
         return response.data;
     }
 };

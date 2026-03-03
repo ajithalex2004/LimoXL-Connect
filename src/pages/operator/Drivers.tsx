@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { operatorService, type Driver, type FleetAttachment } from '../../services/api';
-import { 
-    Plus, User, Search, Edit2, Trash2, 
+import { operatorService, type Driver, type FleetAttachment, type NUIMaster } from '../../services/api';
+import {
+    Plus, User, Search, Edit2, Trash2,
     X, Info, Paperclip,
     Calendar, Shield, Phone, Globe, Hash,
     Download, FileText
@@ -12,7 +12,11 @@ const Drivers = () => {
     const [drivers, setDrivers] = useState<Driver[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    
+
+    // Masters State
+    const [driverTypes, setDriverTypes] = useState<NUIMaster[]>([]);
+    const [hierarchies, setHierarchies] = useState<NUIMaster[]>([]);
+
     // Modal State
     const [showModal, setShowModal] = useState(false);
     const [activeTab, setActiveTab] = useState<'personal' | 'attachments'>('personal');
@@ -42,7 +46,21 @@ const Drivers = () => {
 
     useEffect(() => {
         loadData();
+        loadMasters();
     }, []);
+
+    const loadMasters = async () => {
+        try {
+            const [types, hierarchyList] = await Promise.all([
+                operatorService.listMasters('DRIVER_TYPE'),
+                operatorService.listMasters('HIERARCHY')
+            ]);
+            setDriverTypes(types.filter(m => m.is_active));
+            setHierarchies(hierarchyList.filter(m => m.is_active));
+        } catch (error) {
+            console.error("Failed to load masters", error);
+        }
+    };
 
     // Auto-generate name and full name
     useEffect(() => {
@@ -133,7 +151,7 @@ const Drivers = () => {
         }
     };
 
-    const filteredDrivers = drivers.filter(d => 
+    const filteredDrivers = drivers.filter(d =>
         d.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         d.phone.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -261,17 +279,15 @@ const Drivers = () => {
                         <div className="px-6 flex border-b border-gray-100">
                             <button
                                 onClick={() => setActiveTab('personal')}
-                                className={`px-4 py-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors ${
-                                    activeTab === 'personal' ? 'border-emerald-600 text-emerald-600' : 'border-transparent text-gray-500 hover:text-gray-700'
-                                }`}
+                                className={`px-4 py-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors ${activeTab === 'personal' ? 'border-emerald-600 text-emerald-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+                                    }`}
                             >
                                 <User className="h-4 w-4" /> Personal Details
                             </button>
                             <button
                                 onClick={() => setActiveTab('attachments')}
-                                className={`px-4 py-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors ${
-                                    activeTab === 'attachments' ? 'border-emerald-600 text-emerald-600' : 'border-transparent text-gray-500 hover:text-gray-700'
-                                }`}
+                                className={`px-4 py-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors ${activeTab === 'attachments' ? 'border-emerald-600 text-emerald-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+                                    }`}
                             >
                                 <Paperclip className="h-4 w-4" /> Attachments
                             </button>
@@ -306,8 +322,9 @@ const Drivers = () => {
                                                     onChange={e => setFormData({ ...formData, hierarchy: e.target.value })}
                                                 >
                                                     <option value="">Select hierarchy</option>
-                                                    <option value="Executive">Executive</option>
-                                                    <option value="Premium">Premium</option>
+                                                    {hierarchies.map(m => (
+                                                        <option key={m.id} value={m.name}>{m.name}</option>
+                                                    ))}
                                                 </select>
                                             </div>
                                             <div className="space-y-1.5">
@@ -319,9 +336,10 @@ const Drivers = () => {
                                                     value={formData.driver_type}
                                                     onChange={e => setFormData({ ...formData, driver_type: e.target.value })}
                                                 >
-                                                    <option value="Regular">Regular</option>
-                                                    <option value="Temporary">Temporary</option>
-                                                    <option value="VIP">VIP</option>
+                                                    <option value="">Select Type</option>
+                                                    {driverTypes.map(m => (
+                                                        <option key={m.id} value={m.name}>{m.name}</option>
+                                                    ))}
                                                 </select>
                                             </div>
                                         </div>
@@ -500,7 +518,7 @@ const Drivers = () => {
                                                         Select Files
                                                     </button>
                                                 </div>
-                                                
+
                                                 <div className="space-y-3">
                                                     <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Attached Files ({attachments.length})</p>
                                                     {attLoading ? (
@@ -524,10 +542,10 @@ const Drivers = () => {
                                                                         <a href={att.file_url} target="_blank" rel="noreferrer" className="p-1.5 text-gray-400 hover:text-emerald-600 rounded-lg">
                                                                             <Download className="h-4 w-4" />
                                                                         </a>
-                                                                        <button 
-                                                                            type="button" 
+                                                                        <button
+                                                                            type="button"
                                                                             onClick={async () => {
-                                                                                if(confirm('Delete attachment?')) {
+                                                                                if (confirm('Delete attachment?')) {
                                                                                     await operatorService.deleteAttachment(att.id);
                                                                                     const updated = await operatorService.listAttachments(editingDriver.id, 'driver');
                                                                                     setAttachments(updated);

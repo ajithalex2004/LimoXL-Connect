@@ -76,6 +76,7 @@ func main() {
 	outsourceCompanyRepo := repository.NewOutsourceCompanyRepo(db.DB)
 	tenantRepo := repository.NewTenantRepository(db.DB)
 	attachmentRepo := repository.NewPostgresFleetAttachmentRepo(db.DB)
+	nuiMasterRepo := repository.NewPostgresNUIMasterRepo(db.DB)
 
 	// Initialize Handlers
 	companyHandler := api.NewCompanyHandler(companyRepo)
@@ -85,6 +86,7 @@ func main() {
 	authHandler := api.NewAuthHandler(userRepo, tenantRepo)
 	operatorHandler := api.NewOperatorHandler(companyRepo, userRepo, tripRepo, outsourceCompanyRepo)
 	fleetHandler := api.NewFleetHandler(vehicleRepo, driverRepo, attachmentRepo)
+	nuiMasterHandler := &api.NUIMasterHandler{MasterRepo: nuiMasterRepo}
 	superAdminHandler := api.NewSuperAdminHandler(tenantRepo, userRepo)
 
 	r := chi.NewRouter()
@@ -205,6 +207,12 @@ func main() {
 				r.Get("/attachments", fleetHandler.ListAttachments)
 				r.Post("/attachments", fleetHandler.CreateAttachment)
 				r.Delete("/attachments/{id}", fleetHandler.DeleteAttachment)
+
+				// NUI Masters
+				r.Get("/masters", nuiMasterHandler.List)
+				r.Post("/masters", nuiMasterHandler.Create)
+				r.Put("/masters/{id}", nuiMasterHandler.Update)
+				r.Delete("/masters/{id}", nuiMasterHandler.Delete)
 			})
 
 			// Team Features

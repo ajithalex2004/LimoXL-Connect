@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { operatorService, type Vehicle, type FleetAttachment } from '../../services/api';
-import { 
-    Plus, Car, Search, Edit2, Trash2, 
+import { operatorService, type Vehicle, type FleetAttachment, type NUIMaster } from '../../services/api';
+import {
+    Plus, Car, Search, Edit2, Trash2,
     X, Info, Paperclip, CheckCircle2,
     Calendar, Shield, MapPin, Hash, Palette,
-    Download, FileText
+    Download, FileText, Settings2
 } from 'lucide-react';
 
 const Vehicles = () => {
@@ -12,7 +12,13 @@ const Vehicles = () => {
     const [vehicles, setVehicles] = useState<Vehicle[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    
+
+    // Masters State
+    const [vehicleTypes, setVehicleTypes] = useState<NUIMaster[]>([]);
+    const [vehicleClasses, setVehicleClasses] = useState<NUIMaster[]>([]);
+    const [vehicleUsages, setVehicleUsages] = useState<NUIMaster[]>([]);
+    const [hierarchies, setHierarchies] = useState<NUIMaster[]>([]);
+
     // Modal State
     const [showModal, setShowModal] = useState(false);
     const [activeTab, setActiveTab] = useState<'basic' | 'attachments'>('basic');
@@ -25,8 +31,8 @@ const Vehicles = () => {
         plate_number: '',
         model: '',
         color: '',
-        vehicle_class: 'Standard',
-        vehicle_group: 'Sedan',
+        vehicle_class: '',
+        vehicle_group: '',
         capacity: 4,
         year_of_manufacture: new Date().getFullYear(),
         vin: '',
@@ -36,7 +42,7 @@ const Vehicles = () => {
         plate_category: '',
         emirate: 'Dubai',
         hierarchy: '',
-        vehicle_usage: 'Public',
+        vehicle_usage: '',
         permit_expiry: '',
         insurance_expiry: '',
         status: 'OFFLINE'
@@ -44,7 +50,25 @@ const Vehicles = () => {
 
     useEffect(() => {
         loadData();
+        loadMasters();
     }, []);
+
+    const loadMasters = async () => {
+        try {
+            const [types, classes, usages, hierarchyList] = await Promise.all([
+                operatorService.listMasters('TYPE'),
+                operatorService.listMasters('CLASS'),
+                operatorService.listMasters('USAGE'),
+                operatorService.listMasters('HIERARCHY')
+            ]);
+            setVehicleTypes(types.filter(m => m.is_active));
+            setVehicleClasses(classes.filter(m => m.is_active));
+            setVehicleUsages(usages.filter(m => m.is_active));
+            setHierarchies(hierarchyList.filter(m => m.is_active));
+        } catch (error) {
+            console.error("Failed to load masters", error);
+        }
+    };
 
     const loadData = async () => {
         try {
@@ -89,7 +113,7 @@ const Vehicles = () => {
         setFormData({ ...vehicle });
         setActiveTab('basic');
         setShowModal(true);
-        
+
         // Load attachments
         try {
             setAttLoading(true);
@@ -129,7 +153,7 @@ const Vehicles = () => {
         }
     };
 
-    const filteredVehicles = vehicles.filter(v => 
+    const filteredVehicles = vehicles.filter(v =>
         v.plate_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
         v.model.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -213,11 +237,10 @@ const Vehicles = () => {
                                             <div className="text-xs text-gray-400">{vehicle.vehicle_group}</div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full uppercase border ${
-                                                vehicle.status === 'IDLE' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 
-                                                vehicle.status === 'ON_TRIP' ? 'bg-blue-50 text-blue-700 border-blue-100' :
-                                                'bg-gray-50 text-gray-600 border-gray-100'
-                                            }`}>
+                                            <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full uppercase border ${vehicle.status === 'IDLE' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
+                                                    vehicle.status === 'ON_TRIP' ? 'bg-blue-50 text-blue-700 border-blue-100' :
+                                                        'bg-gray-50 text-gray-600 border-gray-100'
+                                                }`}>
                                                 {vehicle.status}
                                             </span>
                                         </td>
@@ -267,17 +290,15 @@ const Vehicles = () => {
                         <div className="px-6 flex border-b border-gray-100">
                             <button
                                 onClick={() => setActiveTab('basic')}
-                                className={`px-4 py-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors ${
-                                    activeTab === 'basic' ? 'border-emerald-600 text-emerald-600' : 'border-transparent text-gray-500 hover:text-gray-700'
-                                }`}
+                                className={`px-4 py-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors ${activeTab === 'basic' ? 'border-emerald-600 text-emerald-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+                                    }`}
                             >
                                 <Info className="h-4 w-4" /> Basic Details
                             </button>
                             <button
                                 onClick={() => setActiveTab('attachments')}
-                                className={`px-4 py-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors ${
-                                    activeTab === 'attachments' ? 'border-emerald-600 text-emerald-600' : 'border-transparent text-gray-500 hover:text-gray-700'
-                                }`}
+                                className={`px-4 py-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors ${activeTab === 'attachments' ? 'border-emerald-600 text-emerald-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+                                    }`}
                             >
                                 <Paperclip className="h-4 w-4" /> Attachments
                             </button>
@@ -416,8 +437,9 @@ const Vehicles = () => {
                                                         onChange={e => setFormData({ ...formData, hierarchy: e.target.value })}
                                                     >
                                                         <option value="">Select hierarchy</option>
-                                                        <option value="Alpha">Alpha</option>
-                                                        <option value="Beta">Beta</option>
+                                                        {hierarchies.map(m => (
+                                                            <option key={m.id} value={m.name}>{m.name}</option>
+                                                        ))}
                                                     </select>
                                                 </div>
                                                 <div className="space-y-1.5">
@@ -427,10 +449,23 @@ const Vehicles = () => {
                                                         value={formData.vehicle_group}
                                                         onChange={e => setFormData({ ...formData, vehicle_group: e.target.value })}
                                                     >
-                                                        <option value="Sedan">Sedan</option>
-                                                        <option value="SUV">SUV</option>
-                                                        <option value="Van">Van</option>
-                                                        <option value="Bus">Bus</option>
+                                                        <option value="">Select Type</option>
+                                                        {vehicleTypes.map(m => (
+                                                            <option key={m.id} value={m.name}>{m.name}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                                <div className="space-y-1.5">
+                                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Vehicle Class</label>
+                                                    <select
+                                                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-sm appearance-none"
+                                                        value={formData.vehicle_class}
+                                                        onChange={e => setFormData({ ...formData, vehicle_class: e.target.value })}
+                                                    >
+                                                        <option value="">Select Class</option>
+                                                        {vehicleClasses.map(m => (
+                                                            <option key={m.id} value={m.name}>{m.name}</option>
+                                                        ))}
                                                     </select>
                                                 </div>
                                                 <div className="space-y-1.5">
@@ -440,8 +475,10 @@ const Vehicles = () => {
                                                         value={formData.vehicle_usage}
                                                         onChange={e => setFormData({ ...formData, vehicle_usage: e.target.value })}
                                                     >
-                                                        <option value="Public">Public</option>
-                                                        <option value="Private">Private</option>
+                                                        <option value="">Select Usage</option>
+                                                        {vehicleUsages.map(m => (
+                                                            <option key={m.id} value={m.name}>{m.name}</option>
+                                                        ))}
                                                     </select>
                                                 </div>
                                             </div>
@@ -496,7 +533,7 @@ const Vehicles = () => {
                                                         Select Files
                                                     </button>
                                                 </div>
-                                                
+
                                                 <div className="space-y-3">
                                                     <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Attached Files ({attachments.length})</p>
                                                     {attLoading ? (
@@ -520,10 +557,10 @@ const Vehicles = () => {
                                                                         <a href={att.file_url} target="_blank" rel="noreferrer" className="p-1.5 text-gray-400 hover:text-emerald-600 rounded-lg">
                                                                             <Download className="h-4 w-4" />
                                                                         </a>
-                                                                        <button 
-                                                                            type="button" 
+                                                                        <button
+                                                                            type="button"
                                                                             onClick={async () => {
-                                                                                if(confirm('Delete attachment?')) {
+                                                                                if (confirm('Delete attachment?')) {
                                                                                     await operatorService.deleteAttachment(att.id);
                                                                                     const updated = await operatorService.listAttachments(editingVehicle.id, 'vehicle');
                                                                                     setAttachments(updated);

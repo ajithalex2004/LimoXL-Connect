@@ -14,7 +14,8 @@ import {
     Users,
     DollarSign,
     Shield,
-    Server
+    Server,
+    Settings2
 } from 'lucide-react';
 import { useAuthStore } from '../lib/auth';
 import ChangePasswordModal from './ChangePasswordModal';
@@ -52,9 +53,10 @@ const Layout = () => {
         if (role === 'ADMIN' || role === 'OPS' || role === 'DISPATCHER') {
             const items = [
                 { name: 'Dashboard', path: '/', icon: LayoutDashboard },
-                { name: 'Trips', path: '/dispatch', icon: LayoutDashboard }, 
+                { name: 'Trips', path: '/dispatch', icon: LayoutDashboard },
                 { name: 'Vehicle Master', path: '/vehicles', icon: Car },
                 { name: 'Driver Master', path: '/drivers', icon: User },
+                { name: 'NUI Masters', path: '/fleet-masters', icon: Settings2 },
                 { name: 'Outsource Companies', path: '/outsource-master', icon: Building },
                 { name: 'Submitted Quotes', path: '/quotes', icon: FileText },
             ];

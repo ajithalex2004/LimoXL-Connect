@@ -13,6 +13,7 @@ import TeamManagement from './pages/operator/TeamManagement';
 import Dispatch from './pages/operator/Dispatch';
 import OperatorVehicles from './pages/operator/Vehicles';
 import OperatorDrivers from './pages/operator/Drivers';
+import NUIMasters from './pages/operator/NUIMasters';
 import SecureDriverLink from './pages/SecureDriverLink';
 import TenantDashboard from './pages/superadmin/TenantDashboard';
 import TenantDetail from './pages/superadmin/TenantDetail';
@@ -36,6 +37,7 @@ function App() {
                     <Route path="team" element={<TeamManagement />} />
                     <Route path="vehicles" element={<OperatorVehicles />} />
                     <Route path="drivers" element={<OperatorDrivers />} />
+                    <Route path="fleet-masters" element={<NUIMasters />} />
                     
                     {/* SuperAdmin Routes */}
                     <Route path="superadmin/dashboard" element={<TenantDashboard />} />

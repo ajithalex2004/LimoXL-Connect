@@ -44,3 +44,11 @@ type FleetAttachmentRepository interface {
 	ListByEntity(ctx context.Context, entityID uuid.UUID, entityType string) ([]models.FleetAttachment, error)
 	Delete(ctx context.Context, id uuid.UUID) error
 }
+
+type NUIMasterRepository interface {
+	Create(ctx context.Context, master *models.NUIMaster) error
+	GetByID(ctx context.Context, id uuid.UUID) (*models.NUIMaster, error)
+	ListByCompany(ctx context.Context, companyID uuid.UUID, category string) ([]models.NUIMaster, error)
+	Update(ctx context.Context, master *models.NUIMaster) error
+	Delete(ctx context.Context, id uuid.UUID) error
+}
