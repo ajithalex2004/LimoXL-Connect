@@ -308,14 +308,15 @@ const Drivers = () => {
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                             <div className="space-y-1.5">
                                                 <label className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
-                                                    <Hash className="h-3 w-3" /> Driver ID
+                                                    <Hash className="h-3 w-3" /> Driver ID *
                                                 </label>
                                                 <input
                                                     type="text"
+                                                    required
                                                     placeholder="e.g., DRV001"
                                                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-sm"
-                                                    value={editingDriver?.id?.substring(0, 8) || 'AUTO-ID'}
-                                                    readOnly
+                                                    value={formData.dallas_id}
+                                                    onChange={e => setFormData({ ...formData, dallas_id: e.target.value })}
                                                 />
                                             </div>
                                             <div className="space-y-1.5">
@@ -449,16 +450,6 @@ const Drivers = () => {
                                                         className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-sm"
                                                         value={formData.date_of_join ? formData.date_of_join.split('T')[0] : ''}
                                                         onChange={e => setFormData({ ...formData, date_of_join: e.target.value })}
-                                                    />
-                                                </div>
-                                                <div className="space-y-1.5">
-                                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Dallas ID</label>
-                                                    <input
-                                                        type="text"
-                                                        placeholder="Enter Dallas ID"
-                                                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-sm"
-                                                        value={formData.dallas_id}
-                                                        onChange={e => setFormData({ ...formData, dallas_id: e.target.value })}
                                                     />
                                                 </div>
                                             </div>

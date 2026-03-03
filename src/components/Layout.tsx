@@ -57,6 +57,7 @@ const Layout = () => {
                 { name: 'Vehicle Master', path: '/vehicles', icon: Car },
                 { name: 'Driver Master', path: '/drivers', icon: User },
                 { name: 'NUI Masters', path: '/fleet-masters', icon: Settings2 },
+                { name: 'Booking Config', path: '/booking-configs', icon: Settings },
                 { name: 'Outsource Companies', path: '/outsource-master', icon: Building },
                 { name: 'Submitted Quotes', path: '/quotes', icon: FileText },
             ];

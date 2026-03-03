@@ -77,6 +77,7 @@ func main() {
 	tenantRepo := repository.NewTenantRepository(db.DB)
 	attachmentRepo := repository.NewPostgresFleetAttachmentRepo(db.DB)
 	nuiMasterRepo := repository.NewPostgresNUIMasterRepo(db.DB)
+	bookingConfigRepo := repository.NewPostgresBookingConfigRepo(db.DB)
 
 	// Initialize Handlers
 	companyHandler := api.NewCompanyHandler(companyRepo)
@@ -87,6 +88,7 @@ func main() {
 	operatorHandler := api.NewOperatorHandler(companyRepo, userRepo, tripRepo, outsourceCompanyRepo)
 	fleetHandler := api.NewFleetHandler(vehicleRepo, driverRepo, attachmentRepo)
 	nuiMasterHandler := &api.NUIMasterHandler{MasterRepo: nuiMasterRepo}
+	bookingConfigHandler := &api.BookingConfigHandler{Repo: bookingConfigRepo}
 	superAdminHandler := api.NewSuperAdminHandler(tenantRepo, userRepo)
 
 	r := chi.NewRouter()
@@ -213,6 +215,12 @@ func main() {
 				r.Post("/masters", nuiMasterHandler.Create)
 				r.Put("/masters/{id}", nuiMasterHandler.Update)
 				r.Delete("/masters/{id}", nuiMasterHandler.Delete)
+
+				// Booking Configs
+				r.Get("/booking-configs", bookingConfigHandler.List)
+				r.Post("/booking-configs", bookingConfigHandler.Create)
+				r.Put("/booking-configs/{id}", bookingConfigHandler.Update)
+				r.Delete("/booking-configs/{id}", bookingConfigHandler.Delete)
 			})
 
 			// Team Features

@@ -24,6 +24,27 @@ export interface Trip {
     updated_at?: string;
 }
 
+export interface BookingConfig {
+    id: string;
+    company_id: string;
+    name: string;
+    booking_type: string;
+    request_type: string;
+    priority: string;
+    sort_order: number;
+    vehicle_classes: string[];
+    vehicle_groups: string[];
+    vehicle_usages: string[];
+    pickup_buffer: number;
+    auto_dispatch_buffer: number;
+    pricing_source: string;
+    approval_workflow_required: boolean;
+    epod_required: boolean;
+    is_active: boolean;
+    created_at?: string;
+    updated_at?: string;
+}
+
 export interface QuoteRequest {
     trip_id: string;
     price: number;
@@ -351,6 +372,27 @@ export const operatorService = {
 
     deleteMaster: async (id: string) => {
         const response = await api.delete(`operator/masters/${id}`);
+        return response.data;
+    },
+
+    // Booking Configs
+    listBookingConfigs: async (): Promise<BookingConfig[]> => {
+        const response = await api.get<BookingConfig[]>('operator/booking-configs');
+        return response.data || [];
+    },
+
+    createBookingConfig: async (data: Partial<BookingConfig>) => {
+        const response = await api.post('operator/booking-configs', data);
+        return response.data;
+    },
+
+    updateBookingConfig: async (id: string, data: Partial<BookingConfig>) => {
+        const response = await api.put(`operator/booking-configs/${id}`, data);
+        return response.data;
+    },
+
+    deleteBookingConfig: async (id: string) => {
+        const response = await api.delete(`operator/booking-configs/${id}`);
         return response.data;
     }
 };

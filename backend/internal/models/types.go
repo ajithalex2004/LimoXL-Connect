@@ -307,3 +307,23 @@ type SubmitInvoiceRequest struct {
 	InvoiceNumber string  `json:"invoice_number"`
 	Amount        float64 `json:"amount"`
 }
+type BookingConfig struct {
+	ID                       uuid.UUID       `db:"id" json:"id"`
+	CompanyID                uuid.UUID       `db:"company_id" json:"company_id"`
+	Name                     string          `db:"name" json:"name"`
+	BookingType              string          `db:"booking_type" json:"booking_type"`
+	RequestType              string          `db:"request_type" json:"request_type"`
+	Priority                 string          `db:"priority" json:"priority"`
+	SortOrder                int             `db:"sort_order" json:"sort_order"`
+	VehicleClasses           json.RawMessage `db:"vehicle_classes" json:"vehicle_classes"`
+	VehicleGroups            json.RawMessage `db:"vehicle_groups" json:"vehicle_groups"`
+	VehicleUsages            json.RawMessage `db:"vehicle_usages" json:"vehicle_usages"`
+	PickupBuffer             int             `db:"pickup_buffer" json:"pickup_buffer"`
+	AutoDispatchBuffer       int             `db:"auto_dispatch_buffer" json:"auto_dispatch_buffer"`
+	PricingSource            string          `db:"pricing_source" json:"pricing_source"`
+	ApprovalWorkflowRequired bool            `db:"approval_workflow_required" json:"approval_workflow_required"`
+	EPODRequired             bool            `db:"epod_required" json:"epod_required"`
+	IsActive                 bool            `db:"is_active" json:"is_active"`
+	CreatedAt                time.Time       `db:"created_at" json:"created_at"`
+	UpdatedAt                time.Time       `db:"updated_at" json:"updated_at"`
+}

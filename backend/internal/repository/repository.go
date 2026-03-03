@@ -52,3 +52,11 @@ type NUIMasterRepository interface {
 	Update(ctx context.Context, master *models.NUIMaster) error
 	Delete(ctx context.Context, id uuid.UUID) error
 }
+
+type BookingConfigRepository interface {
+	Create(ctx context.Context, config *models.BookingConfig) error
+	GetByID(ctx context.Context, id uuid.UUID) (*models.BookingConfig, error)
+	ListByCompany(ctx context.Context, companyID uuid.UUID) ([]models.BookingConfig, error)
+	Update(ctx context.Context, config *models.BookingConfig) error
+	Delete(ctx context.Context, id uuid.UUID) error
+}

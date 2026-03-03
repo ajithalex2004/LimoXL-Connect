@@ -14,6 +14,8 @@ import Dispatch from './pages/operator/Dispatch';
 import OperatorVehicles from './pages/operator/Vehicles';
 import OperatorDrivers from './pages/operator/Drivers';
 import NUIMasters from './pages/operator/NUIMasters';
+import BookingConfigs from './pages/operator/BookingConfigs';
+import OutsourceCompanies from './pages/operator/OutsourceCompanies';
 import SecureDriverLink from './pages/SecureDriverLink';
 import TenantDashboard from './pages/superadmin/TenantDashboard';
 import TenantDetail from './pages/superadmin/TenantDetail';
@@ -38,7 +40,8 @@ function App() {
                     <Route path="vehicles" element={<OperatorVehicles />} />
                     <Route path="drivers" element={<OperatorDrivers />} />
                     <Route path="fleet-masters" element={<NUIMasters />} />
-                    
+                    <Route path="booking-configs" element={<BookingConfigs />} />
+
                     {/* SuperAdmin Routes */}
                     <Route path="superadmin/dashboard" element={<TenantDashboard />} />
                     <Route path="superadmin/tenants/:id" element={<TenantDetail />} />
