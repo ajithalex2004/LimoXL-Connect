@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { operatorService, type Vehicle, type FleetAttachment } from '../../services/api';
 import { 
-    Plus, Car, Search, MoreVertical, Edit2, Trash2, 
-    ChevronRight, X, Info, Paperclip, CheckCircle2,
-    Calendar, Shield, User, MapPin, Hash, Palette,
+    Plus, Car, Search, Edit2, Trash2, 
+    X, Info, Paperclip, CheckCircle2,
+    Calendar, Shield, MapPin, Hash, Palette,
     Download, FileText
 } from 'lucide-react';
 

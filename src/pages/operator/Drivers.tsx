@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { operatorService, type Driver, type FleetAttachment } from '../../services/api';
 import { 
     Plus, User, Search, Edit2, Trash2, 
-    X, Info, Paperclip, CheckCircle2,
+    X, Info, Paperclip,
     Calendar, Shield, Phone, Globe, Hash,
     Download, FileText
 } from 'lucide-react';
